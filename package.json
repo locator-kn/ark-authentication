@@ -25,6 +25,10 @@
     "node-notifier": "^4.1.2"
   },
   "dependencies": {
+    "bell": "^2.5.0",
+    "boom": "^2.7.1",
+    "hapi-auth-cookie": "^2.1.0",
+    "joi": "^6.4.1",
     "typescript": "^1.5.0-alpha"
   }
 }

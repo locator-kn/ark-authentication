@@ -55,40 +55,6 @@ class ArkAuth {
                     isSecure: false     // Terrible idea but required if not using HTTPS
                 });
 
-                server.route({
-                    method: ['GET', 'POST'], // Must handle both GET and POST
-                    path: '/login',          // The callback endpoint registered with the provider
-                    config: {
-                        auth: 'google',
-                        handler: function (request, reply) {
-                            console.log(request.auth)
-                            request.auth.session.set(request.auth.credentials);
-                            // Perform any account lookup or registration, setup local session,
-                            // and redirect to the application. The third-party credentials are
-                            // stored in request.auth.credentials. Any query parameters from
-                            // the initial request are passed back via request.auth.credentials.query.
-                            return reply.redirect('/#/trips');
-                        }
-                    }
-                });
-
-                server.route({
-                    method: ['GET', 'POST'], // Must handle both GET and POST
-                    path: '/loginFacebook',          // The callback endpoint registered with the provider
-                    config: {
-                        auth: 'facebook',
-                        handler: function (request, reply) {
-                            console.log(request.auth);
-
-                            request.auth.session.set(request.auth.credentials);
-                            // Perform any account lookup or registration, setup local session,
-                            // and redirect to the application. The third-party credentials are
-                            // stored in request.auth.credentials. Any query parameters from
-                            // the initial request are passed back via request.auth.credentials.query.
-                            return reply.redirect('/');
-                        }
-                    }
-                });
 
             });
 
@@ -106,8 +72,28 @@ class ArkAuth {
     };
 
     private _register(server, options) {
-        // Register
-        return 'register';
+        server.route({
+            method: ['GET', 'POST'], // Must handle both GET and POST
+            path: '/login',          // The callback endpoint registered with the provider
+            config: {
+                auth: 'google',
+                handler: this.loginHandler
+            }
+        });
+
+        server.route({
+            method: ['GET', 'POST'], // Must handle both GET and POST
+            path: '/loginFacebook',          // The callback endpoint registered with the provider
+            config: {
+                auth: 'facebook',
+                handler: this.loginHandler
+            }
+        });
+    }
+
+    loginHandler(request, reply) {
+        request.auth.session.set(request.auth.credentials);
+        return reply.redirect('/');
     }
 
     errorInit(error) {

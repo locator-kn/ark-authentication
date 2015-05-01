@@ -22,7 +22,7 @@ class ArkAuth {
         server.bind(this);
 
         server.register(require('hapi-auth-cookie'), err => {
-            if(err) {
+            if (err) {
                 this.errorInit(err);
             }
 
@@ -35,7 +35,7 @@ class ArkAuth {
             //});
 
             server.register(require('bell'), err => {
-                if(err) {
+                if (err) {
                     this.errorInit(err);
                 }
 
@@ -88,7 +88,6 @@ class ArkAuth {
                 });
 
             });
-
 
 
             server.dependency('ark-database', (server, continueRegister) => {

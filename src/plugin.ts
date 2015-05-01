@@ -26,13 +26,13 @@ class ArkAuth {
                 this.errorInit(err);
             }
 
-            //server.auth.strategy('session', 'cookie', this.mode, {
-            //    password: 'secret',
-            //    ttl: this.ttl || 600000,
-            //    keepAlive: true,
-            //    cookie: 'ark_session',
-            //    isSecure: false
-            //});
+            server.auth.strategy('session', 'cookie', this.mode, {
+                password: this.env['COOKIE_SECRET'],
+                ttl: this.ttl || 600000,
+                keepAlive: true,
+                cookie: 'ark_session',
+                isSecure: false
+            });
 
             server.register(require('bell'), err => {
                 if (err) {
@@ -62,6 +62,7 @@ class ArkAuth {
                         auth: 'google',
                         handler: function (request, reply) {
                             console.log(request.auth)
+                            request.auth.session.set(request.auth.credentials);
                             // Perform any account lookup or registration, setup local session,
                             // and redirect to the application. The third-party credentials are
                             // stored in request.auth.credentials. Any query parameters from
@@ -78,6 +79,8 @@ class ArkAuth {
                         auth: 'facebook',
                         handler: function (request, reply) {
                             console.log(request.auth);
+
+                            request.auth.session.set(request.auth.credentials);
                             // Perform any account lookup or registration, setup local session,
                             // and redirect to the application. The third-party credentials are
                             // stored in request.auth.credentials. Any query parameters from

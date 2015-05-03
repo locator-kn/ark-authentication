@@ -132,8 +132,50 @@ class ArkAuth {
     }
 
     loginHandler(request, reply) {
-        request.auth.session.set(request.auth.credentials);
-        return reply.redirect('/');
+        var profile = request.auth.credentials.profile;
+        var strategy = request.auth.strategy;
+        this.db.getUserLogin(profile.email, (err, users) => {
+            if(err) {
+                return reply(this.boom.wrap(err, 400));
+            }
+            // there is already a user with this email registered
+            if(users.length) {
+                var user = users[0];
+                if(user.value.strategy === strategy) {
+                    var userSessionData = {
+                        mail: profile.email,
+                        _id: user.id
+                    };
+                    request.auth.session.set(userSessionData);
+                    return reply.redirect('/');
+                } else {
+                    console.log('already registered with another strategy');
+                    return reply(this.boom.wrap('email already in use', 409));
+                }
+            } else {
+                console.log('create user');
+                var newUser = {
+                    mail: profile.email,
+                    name: profile.name.first,
+                    surname: profile.name.last,
+                    picture: 'todo',
+                    type: 'user',
+                    strategy: strategy
+                };
+
+                this.db.createUser(newUser, (err, data) => {
+                    if (err) {
+                        return reply(this.boom.wrap(err, 400));
+                    }
+                    var userSessionData = {
+                        mail: profile.email,
+                        _id: data._id
+                    };
+                    request.auth.session.set(userSessionData);
+                });
+            }
+        });
+
     }
 
     login (request, reply) {

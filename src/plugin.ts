@@ -12,8 +12,7 @@ class ArkAuth {
 
     constructor(private mode, private ttl, private env) {
         this.register.attributes = {
-            name: 'ark-authentication',
-            version: '0.1.0'
+            pkg: require('./../../package.json')
         };
         this.boom = require('boom');
         this.joi = require('joi');

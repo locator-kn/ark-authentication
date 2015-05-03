@@ -95,11 +95,60 @@ class ArkAuth {
                 handler: this.loginHandler
             }
         });
+
+        server.route({
+            method: ['POST'],
+            path: '/login',          // The callback endpoint registered with the provider
+            config: {
+                auth: {
+                    mode: 'try',
+                    strategy: 'session'
+                },
+                handler: this.login,
+
+                description: 'Perform login against backend.',
+                tags: ['api', 'user', 'auth', 'authentication', 'cookies'],
+                validate: {
+                    payload: {
+                        mail: this.joi.string().email().min(3).max(30).required()
+                            .description('Mail address'),
+                        password: this.joi.string().alphanum().min(3).max(30).required()
+                            .description('User set password')
+                    }
+                }
+            }
+        });
     }
 
     loginHandler(request, reply) {
         request.auth.session.set(request.auth.credentials);
         return reply.redirect('/');
+    }
+
+    login (request, reply) {
+        if (request.auth.isAuthenticated) {
+            return reply({ message: 'already authenticated'});
+        }
+        if(typeof request.payload === 'string') {
+            request.payload = JSON.parse(request.payload)
+        }
+
+        else {
+            this.db.getUserLogin(request.payload.mail, (err, user) => {
+
+                if (err || !user || !user.length || request.payload.password !== user[0].value.password) {
+                    reply(this.boom.unauthorized('Wrong/invalid mail or password'));
+                } else {
+                    reply(user[0]);
+                    request.auth.session.set(user[0]);
+                }
+
+                //this.bcrypt.compare(password, user[0].value.password, function (err, isValid) {
+                //    reply(err, isValid, user[0]);
+                //});
+            });
+
+        }
     }
 
     errorInit(error) {

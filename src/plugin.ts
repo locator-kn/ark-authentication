@@ -56,6 +56,10 @@ class ArkAuth {
                     isSecure: false     // Terrible idea but required if not using HTTPS
                 });
 
+                server.auth.default({
+                    strategies:['session']
+                });
+
                 this.registerRoutes(server, options);
 
 
@@ -83,7 +87,10 @@ class ArkAuth {
             method: ['GET', 'POST'], // Must handle both GET and POST
             path: '/loginGoogle',    // The callback endpoint registered with the provider
             config: {
-                auth: 'google',
+                auth: {
+                    mode: 'try',
+                    strategy: 'google'
+                },
                 handler: this.loginHandler
             }
         });
@@ -92,7 +99,10 @@ class ArkAuth {
             method: ['GET', 'POST'], // Must handle both GET and POST
             path: '/loginFacebook',          // The callback endpoint registered with the provider
             config: {
-                auth: 'facebook',
+                auth: {
+                    mode: 'try',
+                    strategy: 'facebook'
+                },
                 handler: this.loginHandler
             }
         });

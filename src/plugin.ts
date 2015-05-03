@@ -8,6 +8,7 @@ class ArkAuth {
     db:any;
     boom:any;
     joi:any;
+    bcrypt:any;
 
     constructor(private mode, private ttl, private env) {
         this.register.attributes = {
@@ -16,6 +17,7 @@ class ArkAuth {
         };
         this.boom = require('boom');
         this.joi = require('joi');
+        this.bcrypt = require('bcrypt');
     }
 
     register:IRegister = (server, options, next) => {
@@ -136,16 +138,19 @@ class ArkAuth {
         else {
             this.db.getUserLogin(request.payload.mail, (err, user) => {
 
-                if (err || !user || !user.length || request.payload.password !== user[0].value.password) {
-                    reply(this.boom.unauthorized('Wrong/invalid mail or password'));
-                } else {
+                if (err || !user || !user.length) {
+                    return reply(this.boom.unauthorized('Wrong/invalid mail or password'));
+                }
+                this.bcrypt.compare(request.payload.password, user[0].value.password, (err, res) => {
+                    console.log('err:', err);
+                    console.log('res:', res);
+                    if(err || !res) {
+                        return reply(this.boom.unauthorized('Wrong/invalid mail or password'));
+                    }
                     reply(user[0]);
                     request.auth.session.set(user[0]);
-                }
+                });
 
-                //this.bcrypt.compare(password, user[0].value.password, function (err, isValid) {
-                //    reply(err, isValid, user[0]);
-                //});
             });
 
         }

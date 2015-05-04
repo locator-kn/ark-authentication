@@ -91,7 +91,9 @@ class ArkAuth {
                     mode: 'try',
                     strategy: 'google'
                 },
-                handler: this.loginHandler
+                handler: this.loginHandler,
+                description: 'Login with Google.',
+                tags: ['api', 'user', 'auth', 'authentication', 'cookies', 'oauth']
             }
         });
 
@@ -103,7 +105,9 @@ class ArkAuth {
                     mode: 'try',
                     strategy: 'facebook'
                 },
-                handler: this.loginHandler
+                handler: this.loginHandler,
+                description: 'Login with Facebook.',
+                tags: ['api', 'user', 'auth', 'authentication', 'cookies', 'oauth']
             }
         });
 

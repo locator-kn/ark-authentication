@@ -57,7 +57,7 @@ class ArkAuth {
                 });
 
                 server.auth.default({
-                    strategies:['session']
+                    strategies: ['session']
                 });
 
                 this.registerRoutes(server, options);
@@ -129,19 +129,29 @@ class ArkAuth {
                 }
             }
         });
+
+        server.route({
+            method: ['GET'],
+            path: '/logout',
+            config: {
+                handler: this.logout,
+                description: 'Kill current session.',
+                tags: ['api', 'user', 'auth', 'authentication', 'cookies']
+            }
+        });
     }
 
     loginHandler(request, reply) {
         var profile = request.auth.credentials.profile;
         var strategy = request.auth.strategy;
         this.db.getUserLogin(profile.email, (err, users) => {
-            if(err) {
+            if (err) {
                 return reply(this.boom.wrap(err, 400));
             }
             // there is already a user with this email registered
-            if(users.length) {
+            if (users.length) {
                 var user = users[0];
-                if(user.value.strategy === strategy) {
+                if (user.value.strategy === strategy) {
                     var userSessionData = {
                         mail: profile.email,
                         _id: user.id
@@ -178,15 +188,17 @@ class ArkAuth {
 
     }
 
-    login (request, reply) {
+    login(request, reply) {
         if (request.auth.isAuthenticated) {
-            return reply({ message: 'already authenticated'});
+            return reply({message: 'already authenticated'});
         }
-        if(typeof request.payload === 'string') {
+        if (typeof request.payload === 'string') {
             request.payload = JSON.parse(request.payload)
         }
 
-        else {
+
+    else
+        {
             this.db.getUserLogin(request.payload.mail, (err, user) => {
 
                 if (err || !user || !user.length) {
@@ -195,7 +207,7 @@ class ArkAuth {
                 this.bcrypt.compare(request.payload.password, user[0].value.password, (err, res) => {
                     console.log('err:', err);
                     console.log('res:', res);
-                    if(err || !res) {
+                    if (err || !res) {
                         return reply(this.boom.unauthorized('Wrong/invalid mail or password'));
                     }
                     reply(user[0]);
@@ -205,6 +217,13 @@ class ArkAuth {
             });
 
         }
+    }
+
+    logout(request, reply) {
+        request.auth.session.clear();
+        reply({
+            message: 'bye bye'
+        });
     }
 
     errorInit(error) {

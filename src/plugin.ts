@@ -167,7 +167,6 @@ class ArkAuth {
                     request.auth.session.set(userSessionData);
                     return reply.redirect('/');
                 } else {
-                    console.log('already registered with another strategy');
                     return reply(this.boom.wrap('email already in use', 409));
                 }
             } else {
@@ -214,9 +213,7 @@ class ArkAuth {
                     return reply(this.boom.unauthorized('Wrong/invalid mail or password'));
                 }
                 this.bcrypt.compare(request.payload.password, user[0].value.password, (err, res) => {
-                    
-                    console.log('err:', err);
-                    console.log('res:', res);
+
                     if (err || !res) {
                         return reply(this.boom.unauthorized('Wrong/invalid mail or password'));
                     }

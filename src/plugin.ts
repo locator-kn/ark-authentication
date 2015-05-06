@@ -23,6 +23,7 @@ class ArkAuth {
         server.bind(this);
 
         server.register(require('hapi-auth-cookie'), err => {
+
             if (err) {
                 this.errorInit(err);
             }
@@ -36,6 +37,7 @@ class ArkAuth {
             });
 
             server.register(require('bell'), err => {
+
                 if (err) {
                     this.errorInit(err);
                 }
@@ -67,6 +69,7 @@ class ArkAuth {
 
 
             server.dependency('ark-database', (server, continueRegister) => {
+
                 this.db = server.plugins['ark-database'];
                 continueRegister();
                 next();
@@ -149,6 +152,7 @@ class ArkAuth {
         var profile = request.auth.credentials.profile;
         var strategy = request.auth.strategy;
         this.db.getUserLogin(profile.email, (err, users) => {
+
             if (err) {
                 return reply(this.boom.wrap(err, 400));
             }
@@ -178,6 +182,7 @@ class ArkAuth {
                 };
 
                 this.db.createUser(newUser, (err, data) => {
+
                     if (err) {
                         return reply(this.boom.wrap(err, 400));
                     }
@@ -209,6 +214,7 @@ class ArkAuth {
                     return reply(this.boom.unauthorized('Wrong/invalid mail or password'));
                 }
                 this.bcrypt.compare(request.payload.password, user[0].value.password, (err, res) => {
+                    
                     console.log('err:', err);
                     console.log('res:', res);
                     if (err || !res) {

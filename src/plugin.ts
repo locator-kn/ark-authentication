@@ -209,12 +209,15 @@ class ArkAuth {
             if (err || !user || !user.length) {
                 return reply(this.boom.unauthorized('Wrong/invalid mail or password'));
             }
+
             this.bcrypt.compare(request.payload.password, user[0].value.password, (err, res) => {
 
                 if (err || !res) {
                     return reply(this.boom.unauthorized('Wrong/invalid mail or password'));
                 }
-                reply(user[0]);
+                reply({
+                    message: 'Hi there'
+                });
                 request.auth.session.set(user[0]);
             });
 

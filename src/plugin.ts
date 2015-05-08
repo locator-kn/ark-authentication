@@ -204,26 +204,23 @@ class ArkAuth {
             request.payload = JSON.parse(request.payload)
         }
 
+        this.db.getUserLogin(request.payload.mail, (err, user) => {
 
-    else
-        {
-            this.db.getUserLogin(request.payload.mail, (err, user) => {
+            if (err || !user || !user.length) {
+                return reply(this.boom.unauthorized('Wrong/invalid mail or password'));
+            }
+            this.bcrypt.compare(request.payload.password, user[0].value.password, (err, res) => {
 
-                if (err || !user || !user.length) {
+                if (err || !res) {
                     return reply(this.boom.unauthorized('Wrong/invalid mail or password'));
                 }
-                this.bcrypt.compare(request.payload.password, user[0].value.password, (err, res) => {
-
-                    if (err || !res) {
-                        return reply(this.boom.unauthorized('Wrong/invalid mail or password'));
-                    }
-                    reply(user[0]);
-                    request.auth.session.set(user[0]);
-                });
-
+                reply(user[0]);
+                request.auth.session.set(user[0]);
             });
 
-        }
+        });
+
+
     }
 
     logout(request, reply) {

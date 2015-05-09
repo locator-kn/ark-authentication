@@ -218,7 +218,11 @@ class ArkAuth {
                 reply({
                     message: 'Hi there'
                 });
-                request.auth.session.set(user[0]);
+                var sessionData = {
+                    _id: user[0].id,
+                    mail: user[0].key
+                };
+                request.auth.session.set(sessionData);
             });
 
         });

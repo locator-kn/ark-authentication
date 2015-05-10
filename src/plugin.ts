@@ -204,34 +204,31 @@ class ArkAuth {
             return reply({message: 'already authenticated'});
         }
 
+        function replySuccess () {
+            reply({
+                message: 'Hi there'
+            });
+        }
+        function replyUnauthorized(reason = 'Wrong/invalid mail or password') {
+            reply(this.boom.unauthorized(reason));
+        }
+
         this.db.getUserLogin(request.payload.mail)
             .then(user => {
+                let setSessionData = () => {
+                    request.auth.session.set({
+                        _id: user._id,
+                        mail: user.mail,
+                        strategy: user.strategy
+                    });
+                };
 
                 this.comparePassword(request.payload.password, user.password)
                     .then(setSessionData)
                     .then(replySuccess)
                     .catch(replyUnauthorized);
 
-                var setSessionData = () => {
-                    let sessionData = {
-                        _id: user._id,
-                        mail: user.mail,
-                        strategy: user.strategy
-                    };
-                    request.auth.session.set(sessionData);
-                }
-
             }).catch(replyUnauthorized);
-
-        var replySuccess = () => {
-            reply({
-                message: 'Hi there'
-            });
-        };
-        var replyUnauthorized = (reason = 'Wrong/invalid mail or password') => {
-            reply(this.boom.unauthorized(reason));
-        };
-
     }
 
     comparePassword(plain:string, hashed:string) {

@@ -236,7 +236,6 @@ class ArkAuth {
 
     comparePassword(plain:string, hashed:string) {
         let prom = new Promise((resolve, reject) => {
-            console.log(this);
             this.bcrypt.compare(plain, hashed, (err, res) => {
                 if (err || !res) {
                     return reject(err || 'Wrong/invalid mail or password');

@@ -3,6 +3,9 @@ export interface IRegister {
     attributes?: any;
 }
 
+declare
+var Promise:any;
+
 export default
 class ArkAuth {
     db:any;
@@ -200,34 +203,48 @@ class ArkAuth {
         if (request.auth.isAuthenticated) {
             return reply({message: 'already authenticated'});
         }
-        if (typeof request.payload === 'string') {
-            request.payload = JSON.parse(request.payload)
-        }
 
-        this.db.getUserLogin(request.payload.mail, (err, user) => {
+        this.db.getUserLogin(request.payload.mail)
+            .then(user => {
 
-            if (err || !user || !user.length) {
-                return reply(this.boom.unauthorized('Wrong/invalid mail or password'));
-            }
+                this.comparePassword(request.payload.password, user.password)
+                    .then(setSessionData)
+                    .then(replySuccess)
+                    .catch(replyUnauthorized);
 
-            this.bcrypt.compare(request.payload.password, user[0].value.password, (err, res) => {
-
-                if (err || !res) {
-                    return reply(this.boom.unauthorized('Wrong/invalid mail or password'));
+                var setSessionData = () => {
+                    let sessionData = {
+                        _id: user._id,
+                        mail: user.mail,
+                        strategy: user.strategy
+                    };
+                    request.auth.session.set(sessionData);
                 }
-                reply({
-                    message: 'Hi there'
-                });
-                var sessionData = {
-                    _id: user[0].id,
-                    mail: user[0].key
-                };
-                request.auth.session.set(sessionData);
+
+            }).catch(replyUnauthorized);
+
+        var replySuccess = () => {
+            reply({
+                message: 'Hi there'
             });
+        };
+        var replyUnauthorized = (reason = 'Wrong/invalid mail or password') => {
+            reply(this.boom.unauthorized(reason));
+        };
 
+    }
+
+    comparePassword(plain:string, hashed:string) {
+        let prom = new Promise((resolve, reject) => {
+            console.log(this);
+            this.bcrypt.compare(plain, hashed, (err, res) => {
+                if (err || !res) {
+                    return reject(err || 'Wrong/invalid mail or password');
+                }
+                resolve(res);
+            });
         });
-
-
+        return prom;
     }
 
     logout(request, reply) {

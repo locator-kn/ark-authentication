@@ -154,6 +154,7 @@ class ArkAuth {
             method: ['GET'],
             path: '/users/confirm/{uuid}',
             config: {
+                auth: false,
                 handler: this.confirm,
                 description: 'confirm registration of user by uuid',
                 tags: ['api', 'user', 'auth']

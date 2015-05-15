@@ -214,7 +214,7 @@ class ArkAuth {
             return reply({message: 'already authenticated'});
         }
 
-        function replySuccess () {
+        function replySuccess() {
             reply({
                 message: 'Hi there'
             });
@@ -268,17 +268,19 @@ class ArkAuth {
                 reply(this.boom.wrap('Error on confirmation of e-mail address ', 400));
             }
 
-            console.log(data._id);
+            var user = data[0];
+            if (!user.verified) {
+                this.db.updateDocument(user._id, {verified: true})
+                    .then(()=> {
+                        reply(this.boom.wrap('Updated!', 200));
+                    })
+                    .catch(()=> {
+                        reply(this.boom.wrap('Error on update of verify status!', 400));
+                    });
+            } else {
+                reply(this.boom.wrap('Mail already verified!', 400));
+            }
 
-            this.db.updateDocument(data._id, {verified: true})
-                .then((result)=> {
-                    // TODO: anschauen -> result
-                    reply(result);
-                })
-                .catch((err)=> {
-                    // TODO: adjust message
-                    reply(err);
-                });
         })
     }
 

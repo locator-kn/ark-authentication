@@ -149,7 +149,19 @@ class ArkAuth {
                 tags: ['api', 'user', 'auth', 'authentication', 'cookies']
             }
         });
+
+        server.route({
+            method: ['GET'],
+            path: '/users/confirm',
+            config: {
+                handler: this.confirm,
+                description: 'confirm registration of user by uuid',
+                tags: ['api', 'user', 'auth']
+            }
+        });
     }
+
+
 
     loginHandler(request, reply) {
         var profile = request.auth.credentials.profile;

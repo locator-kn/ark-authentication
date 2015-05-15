@@ -152,7 +152,7 @@ class ArkAuth {
 
         server.route({
             method: ['GET'],
-            path: '/users/confirm',
+            path: '/users/confirm/{uuid}',
             config: {
                 handler: this.confirm,
                 description: 'confirm registration of user by uuid',
@@ -160,8 +160,6 @@ class ArkAuth {
             }
         });
     }
-
-
 
     loginHandler(request, reply) {
         var profile = request.auth.credentials.profile;
@@ -221,6 +219,7 @@ class ArkAuth {
                 message: 'Hi there'
             });
         }
+
         function replyUnauthorized(reason = 'Wrong/invalid mail or password') {
             reply(this.boom.unauthorized(reason));
         }

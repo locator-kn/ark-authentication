@@ -165,7 +165,8 @@ class ArkAuth {
                 if (user.value.strategy === strategy) {
                     var userSessionData = {
                         mail: profile.email,
-                        _id: user.id
+                        _id: user.id,
+                        strategy: strategy
                     };
                     request.auth.session.set(userSessionData);
                     return reply.redirect('/');
@@ -190,7 +191,8 @@ class ArkAuth {
                     }
                     var userSessionData = {
                         mail: profile.email,
-                        _id: data._id
+                        _id: data._id,
+                        strategy: strategy
                     };
                     request.auth.session.set(userSessionData);
                 });

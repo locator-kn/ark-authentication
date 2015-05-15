@@ -263,7 +263,6 @@ class ArkAuth {
     }
 
     confirm(request, reply) {
-        // TODO: use promise instead of callback
         this.db.getUserByUUID(request.params.uuid, (err, data)=> {
             if (err) {
                 reply(this.boom.wrap('Error on confirmation of e-mail address ', 400));
@@ -281,7 +280,6 @@ class ArkAuth {
             } else {
                 reply(this.boom.wrap('Mail already verified!', 400));
             }
-
         })
     }
 

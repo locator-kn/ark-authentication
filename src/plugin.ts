@@ -261,6 +261,15 @@ class ArkAuth {
         });
     }
 
+    confirm(request, reply) {
+        // TODO: use promise instead of callback
+        this.db.getUserByUUID(request.params.uuid, (err, data)=> {
+            if (err) {
+                reply(this.boom.wrap('Error on confirmation of e-mail address ', 400));
+            }
+        })
+    }
+
     errorInit(error) {
         if (error) {
             console.log('Error: Failed to load plugin (ArkAuth):', error);

@@ -267,6 +267,18 @@ class ArkAuth {
             if (err) {
                 reply(this.boom.wrap('Error on confirmation of e-mail address ', 400));
             }
+
+            console.log(data._id);
+
+            this.db.updateDocument(data._id, {verified: true})
+                .then((result)=> {
+                    // TODO: anschauen -> result
+                    reply(result);
+                })
+                .catch((err)=> {
+                    // TODO: adjust message
+                    reply(err);
+                });
         })
     }
 

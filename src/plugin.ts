@@ -271,14 +271,14 @@ class ArkAuth {
             var user = data[0];
             if (!user.verified) {
                 this.db.updateDocument(user._id, {verified: true})
-                    .then(()=> {
-                        reply(this.boom.wrap('Updated!', 200));
+                    .then((result)=> {
+                        reply(result);
                     })
-                    .catch(()=> {
-                        reply(this.boom.wrap('Error on update of verify status!', 400));
+                    .catch((error)=> {
+                        reply(this.boom.wrap(error, 400));
                     });
             } else {
-                reply(this.boom.wrap('Mail already verified!', 400));
+                reply('Mail already verified!');
             }
         })
     }

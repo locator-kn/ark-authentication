@@ -149,6 +149,17 @@ class ArkAuth {
                 tags: ['api', 'user', 'auth', 'authentication', 'cookies']
             }
         });
+
+        server.route({
+            method: ['GET'],
+            path: '/users/confirm/{uuid}',
+            config: {
+                auth: false,
+                handler: this.confirm,
+                description: 'confirm registration of user by uuid',
+                tags: ['api', 'user', 'auth']
+            }
+        });
     }
 
     loginHandler(request, reply) {
@@ -206,11 +217,12 @@ class ArkAuth {
             return reply({message: 'already authenticated'});
         }
 
-        function replySuccess () {
+        function replySuccess() {
             reply({
                 message: 'Hi there'
             });
         }
+
         function replyUnauthorized(reason = 'Wrong/invalid mail or password') {
             reply(this.boom.unauthorized(reason));
         }
@@ -250,6 +262,27 @@ class ArkAuth {
         reply({
             message: 'bye bye'
         });
+    }
+
+    confirm(request, reply) {
+        this.db.getUserByUUID(request.params.uuid, (err, data)=> {
+            if (err) {
+                reply(this.boom.wrap('Error on confirmation of e-mail address ', 400));
+            }
+
+            var user = data[0];
+            if (!user.verified) {
+                this.db.updateDocument(user._id, {verified: true})
+                    .then((result)=> {
+                        reply(result);
+                    })
+                    .catch((error)=> {
+                        reply(this.boom.wrap(error, 400));
+                    });
+            } else {
+                reply('Mail already verified!');
+            }
+        })
     }
 
     errorInit(error) {

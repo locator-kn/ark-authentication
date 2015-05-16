@@ -1,6 +1,6 @@
 {
   "name": "ark-authentication",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "description": "Authentication used in ark",
   "main": "index.js",
   "scripts": {
@@ -34,6 +34,7 @@
     "boom": "^2.7.1",
     "hapi-auth-cookie": "^2.1.0",
     "joi": "^6.4.1",
+    "tsd": "^0.6.0",
     "typescript": "^1.5.0-alpha"
   }
 }

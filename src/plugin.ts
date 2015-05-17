@@ -270,7 +270,7 @@ class ArkAuth {
                 reply(this.boom.wrap('Error on confirmation of e-mail address ', 400));
             }
 
-            var user = data[0];
+            var user = data;
             if (!user.verified) {
                 this.db.updateDocument(user._id, {verified: true})
                     .then((result)=> {

@@ -223,7 +223,10 @@ class ArkAuth {
             });
         }
 
-        function replyUnauthorized(reason = 'Wrong/invalid mail or password') {
+        function replyUnauthorized(reason) {
+            if(!reason) {
+                reason = 'Wrong/invalid mail or password';
+            }
             reply(this.boom.unauthorized(reason));
         }
 

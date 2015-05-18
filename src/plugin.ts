@@ -213,6 +213,7 @@ class ArkAuth {
     }
 
     login(request, reply) {
+        var b = this.boom;
         if (request.auth.isAuthenticated) {
             return reply({message: 'already authenticated'});
         }
@@ -227,7 +228,7 @@ class ArkAuth {
             if(!reason) {
                 reason = 'Wrong/invalid mail or password';
             }
-            reply(this.boom.unauthorized(reason));
+            reply(b.unauthorized(reason));
         }
 
         this.db.getUserLogin(request.payload.mail)

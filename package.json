@@ -1,6 +1,6 @@
 {
   "name": "ark-authentication",
-  "version": "0.6.5",
+  "version": "0.6.6",
   "description": "Authentication used in ark",
   "main": "index.js",
   "scripts": {
@@ -16,9 +16,11 @@
   },
   "devDependencies": {
     "code": "1.x.x",
-    "gulp": "^3.8.11",
     "hapi": "8.x.x",
-    "lab": "5.x.x",
+    "lab": "5.x.x"
+  },
+  "dependencies": {
+    "gulp": "^3.8.11",
     "gulp-jshint": "^1.9.4",
     "gulp-nodemon": "^2.0.2",
     "gulp-notify": "^2.2.0",
@@ -27,8 +29,6 @@
     "gulp-typescript": "^2.5.0",
     "merge2": "^0.3.1",
     "node-notifier": "^4.1.2"
-  },
-  "dependencies": {
     "bcrypt": "^0.8.2",
     "bell": "^2.5.0",
     "boom": "^2.7.1",

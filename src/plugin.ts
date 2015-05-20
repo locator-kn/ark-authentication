@@ -165,52 +165,49 @@ class ArkAuth {
     loginHandler(request, reply) {
         var profile = request.auth.credentials.profile;
         var strategy = request.auth.strategy;
-        this.db.getUserLogin(profile.email, (err, users) => {
-
-            if (err) {
-                return reply(this.boom.wrap(err, 400));
-            }
-            // there is already a user with this email registered
-            if (users.length) {
-                var user = users[0];
-                if (user.value.strategy === strategy) {
+        debugger
+        this.db.getUserLogin(profile.email)
+            .then(user => {
+                // there is already a user with this email registered
+                if (user.strategy === strategy) {
                     var userSessionData = {
                         mail: profile.email,
                         _id: user.id,
                         strategy: strategy
                     };
                     request.auth.session.set(userSessionData);
-                    return reply.redirect('/');
+                    return reply.redirect('http://localhost:8000/#/context');
                 } else {
                     return reply(this.boom.wrap('email already in use', 409));
                 }
-            } else {
-                console.log('create user');
-                var newUser = {
-                    mail: profile.email,
-                    name: profile.name.first,
-                    surname: profile.name.last,
-                    picture: 'todo',
-                    type: 'user',
-                    strategy: strategy
-                };
-
-                this.db.createUser(newUser, (err, data) => {
-
-                    if (err) {
-                        return reply(this.boom.wrap(err, 400));
-                    }
-                    var userSessionData = {
+            }).catch(reason => {
+                if (!reason) {
+                    var newUser = {
                         mail: profile.email,
-                        _id: data._id,
+                        name: profile.name.first,
+                        surname: profile.name.last,
+                        picture: 'todo',
+                        type: 'user',
                         strategy: strategy
                     };
-                    request.auth.session.set(userSessionData);
-                    return reply.redirect('/');
-                });
-            }
-        });
 
+                    this.db.createUser(newUser, (err, data) => {
+                        if (err) {
+                            return reply(this.boom.wrap(err, 400));
+                        }
+                        var userSessionData = {
+                            mail: profile.email,
+                            _id: data._id,
+                            strategy: strategy
+                        };
+                        request.auth.session.set(userSessionData);
+                        return reply.redirect('http://localhost:8000/#/context');
+                    });
+                } else {
+                    return reply(this.boom.wrap(reason, 400));
+                }
+
+            });
     }
 
     login(request, reply) {
@@ -226,7 +223,7 @@ class ArkAuth {
         }
 
         function replyUnauthorized(reason) {
-            if(!reason) {
+            if (!reason) {
                 reason = 'Wrong/invalid mail or password';
             }
             reply(b.unauthorized(reason));

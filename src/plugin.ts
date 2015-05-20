@@ -206,6 +206,7 @@ class ArkAuth {
                         strategy: strategy
                     };
                     request.auth.session.set(userSessionData);
+                    return reply.redirect('/');
                 });
             }
         });

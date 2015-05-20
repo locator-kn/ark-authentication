@@ -176,6 +176,7 @@ class ArkAuth {
                         strategy: strategy
                     };
                     request.auth.session.set(userSessionData);
+                    // TODO: set relative in production
                     return reply.redirect('http://localhost:8000/#/context');
                 } else {
                     return reply(this.boom.wrap('email already in use', 409));
@@ -188,7 +189,8 @@ class ArkAuth {
                         surname: profile.name.last,
                         picture: 'todo',
                         type: 'user',
-                        strategy: strategy
+                        strategy: strategy,
+                        additionalInfo: request.auth.credentials
                     };
 
                     this.db.createUser(newUser, (err, data) => {
@@ -201,6 +203,7 @@ class ArkAuth {
                             strategy: strategy
                         };
                         request.auth.session.set(userSessionData);
+                        // TODO: set relative in production
                         return reply.redirect('http://localhost:8000/#/context');
                     });
                 } else {

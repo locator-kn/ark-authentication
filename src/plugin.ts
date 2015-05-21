@@ -165,9 +165,10 @@ class ArkAuth {
     loginHandler(request, reply) {
         var profile = request.auth.credentials.profile;
         var strategy = request.auth.strategy;
-        debugger
+
         this.db.getUserLogin(profile.email)
             .then(user => {
+
                 // there is already a user with this email registered
                 if (user.strategy === strategy) {
                     var userSessionData = {
@@ -182,6 +183,7 @@ class ArkAuth {
                     return reply(this.boom.wrap('email already in use', 409));
                 }
             }).catch(reason => {
+
                 if (!reason) {
                     var newUser = {
                         mail: profile.email,
@@ -194,6 +196,7 @@ class ArkAuth {
                     };
 
                     this.db.createUser(newUser, (err, data) => {
+                        
                         if (err) {
                             return reply(this.boom.wrap(err, 400));
                         }
@@ -234,6 +237,7 @@ class ArkAuth {
 
         this.db.getUserLogin(request.payload.mail)
             .then(user => {
+
                 let setSessionData = () => {
                     request.auth.session.set({
                         _id: user._id,
@@ -271,6 +275,7 @@ class ArkAuth {
 
     confirm(request, reply) {
         this.db.getUserByUUID(request.params.uuid, (err, data)=> {
+
             if (err) {
                 reply(this.boom.wrap('Error on confirmation of e-mail address ', 400));
             }

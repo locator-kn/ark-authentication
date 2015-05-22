@@ -160,6 +160,17 @@ class ArkAuth {
                 tags: ['api', 'user', 'auth']
             }
         });
+
+        server.route({
+            method: ['GET'],
+            path: '/users/password/forgotten/{mail}',
+            config: {
+                auth: false,
+                handler: this.passwordForgotten,
+                description: 'send password forgotten mail',
+                tags: ['api', 'user', 'auth']
+            }
+        });
     }
 
     loginHandler(request, reply) {

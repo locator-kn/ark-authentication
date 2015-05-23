@@ -207,7 +207,7 @@ class ArkAuth {
                     };
 
                     this.db.createUser(newUser, (err, data) => {
-                        
+
                         if (err) {
                             return reply(this.boom.wrap(err, 400));
                         }
@@ -307,6 +307,11 @@ class ArkAuth {
     }
 
     passwordForgotten = (request, reply) => {
+        this.db.getUserLogin(request.params.mail, (err, data)=> {
+            if (err) {
+                reply(this.boom.wrap('e-mail not found ', 400));
+            }
+        });
         // TODO check if user mail exists
         // TODO response frontend -> email not exists
         // TODO password - stärke check?

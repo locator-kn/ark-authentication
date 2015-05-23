@@ -311,12 +311,10 @@ class ArkAuth {
             if (err) {
                 reply(this.boom.wrap('e-mail not found ', 400));
             }
+            // TODO ? set timestamp
+            // TODO create alternative pw and send per mail
+
         });
-        // TODO check if user mail exists
-        // TODO response frontend -> email not exists
-        // TODO password - stärke check?
-        // TODO ? set timestamp
-        // TODO create alternative pw and send per mail
         // TODO if userpw wrong -> check if alternative pw exists & create Date < 3h -> set alternative to new pw and delete alternative pw & date
     };
 

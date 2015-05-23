@@ -310,18 +310,9 @@ class ArkAuth {
         // TODO check if user mail exists
         // TODO response frontend -> email not exists
         // TODO password - stärke check?
-        // TODO ? set auth token
         // TODO ? set timestamp
-        //
-
-
-        // twitter:
-        // /begin_password_reset
-        // - email
-        // - auth. token: 0e67a0e055961639a77740c56fd5a0205a9e32a8
-        // https://twitter.com/account/confirm_email_reset?reset_type=e&user_id=2573733729&token=JTfiACM7R3r3ChgOdPK9fjkYByyB8gwQFwMEBDAA7dI=-1432283924932&confirm_pending_email=0&token_version=0&password_reset_cause=user
-        // /account/reset_passwordd
-        // 0e67a0e055961639a77740c56fd5a0205a9e32a8
+        // TODO create alternative pw and send per mail
+        // TODO if userpw wrong -> check if alternative pw exists & create Date < 3h -> set alternative to new pw and delete alternative pw & date
     };
 
     errorInit(error) {

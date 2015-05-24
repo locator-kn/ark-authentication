@@ -321,6 +321,10 @@ class ArkAuth {
                     // TODO check err
                     data.resetPasswordToken = hash;
                     data.resetPasswordExpires= 'TODO-date';
+                    //TODO change save to merge in updateUser
+                    this.db.updateUser(data._id, data, (data, err) => {
+
+                    })
                 });
             });
 

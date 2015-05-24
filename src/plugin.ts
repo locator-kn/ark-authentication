@@ -12,6 +12,7 @@ class ArkAuth {
     boom:any;
     joi:any;
     bcrypt:any;
+    generatePassword:any;
 
     constructor(private mode, private ttl, private env) {
         this.register.attributes = {
@@ -20,6 +21,7 @@ class ArkAuth {
         this.boom = require('boom');
         this.joi = require('joi');
         this.bcrypt = require('bcrypt');
+        this.generatePassword = require('password-generator');
     }
 
     register:IRegister = (server, options, next) => {
@@ -312,13 +314,17 @@ class ArkAuth {
                 reply(this.boom.wrap('e-mail not found ', 400));
             }
 
+            var resetPassword = this.generatePassword(12, false); // -> 76PAGEaq6i5c
+            data.resetPasswordToken = 'TODO-pw';
+            data.resetPasswordExpires= 'TODO-date';
+
+            // TODO update user
 
             /*
              resetPasswordToken: String,
              resetPasswordExpires: Date
              */
-            // TODO ? set timestamp
-            // TODO create alternative pw and send per mail
+            // TODO create alternative pw and send per mail -> crypto in database
 
         });
         // TODO if userpw wrong -> check if alternative pw exists & create Date < 3h -> set alternative to new pw and delete alternative pw & date

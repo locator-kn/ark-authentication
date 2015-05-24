@@ -163,7 +163,7 @@ class ArkAuth {
 
         server.route({
             method: ['GET'],
-            path: '/password/forgotten/{mail}',
+            path: '/forgot/{mail}',
             config: {
                 auth: false,
                 handler: this.passwordForgotten,
@@ -311,6 +311,12 @@ class ArkAuth {
             if (err) {
                 reply(this.boom.wrap('e-mail not found ', 400));
             }
+
+
+            /*
+             resetPasswordToken: String,
+             resetPasswordExpires: Date
+             */
             // TODO ? set timestamp
             // TODO create alternative pw and send per mail
 

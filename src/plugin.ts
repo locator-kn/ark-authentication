@@ -315,8 +315,14 @@ class ArkAuth {
             }
 
             var resetPassword = this.generatePassword(12, false); // -> 76PAGEaq6i5c
-            data.resetPasswordToken = 'TODO-pw';
-            data.resetPasswordExpires= 'TODO-date';
+
+            this.bcrypt.genSalt(10, (err, salt) => {
+                this.bcrypt.hash(resetPassword, salt, (err, hash) => {
+                    // TODO check err
+                    data.resetPasswordToken = hash;
+                    data.resetPasswordExpires= 'TODO-date';
+                });
+            });
 
             // TODO update user
 

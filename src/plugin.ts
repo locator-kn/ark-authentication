@@ -323,7 +323,10 @@ class ArkAuth {
                     data.resetPasswordExpires= 'TODO-date';
                     //TODO change save to merge in updateUser
                     this.db.updateUser(data._id, data, (data, err) => {
-
+                        if(err){
+                            reply(this.boom.wrap('tmp password ... any message ', 400));
+                        }
+                        // TODO send email
                     })
                 });
             });

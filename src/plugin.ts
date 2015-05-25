@@ -283,9 +283,17 @@ class ArkAuth {
                         var resetTimestamp = new Date(resetPasswordExpires);
 
                         if(Math.floor((currentTimestamp - resetTimestamp)/ 60e3) < 180) { // 3 hours
+                            this.bcrypt.compare(plain, resetPasswordToken, (err, res) => {
+                                if (err || !res) {
+                                    return reject(err || 'Wrong/invalid mail or password');
+                                }
 
+
+
+                                return resolve(res);
+                            });
                         }
-                        // compare date ~ 3h
+
                     }
                     return reject(err || 'Wrong/invalid mail or password');
                 }

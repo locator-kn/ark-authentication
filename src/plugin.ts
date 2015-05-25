@@ -350,7 +350,7 @@ class ArkAuth {
             this.bcrypt.genSalt(10, (err, salt) => {
                 this.bcrypt.hash(resetPassword, salt, (err, hash) => {
                     if (err) {
-                        reply(this.boom.wrap('intern password generation failed.. (log)', 400));
+                        reply(this.boom.wrap('password creation failed', 400));
                     }
                     var currentTimeStamp = new Date();
 
@@ -359,7 +359,7 @@ class ArkAuth {
 
                     this.db.updateUser(data._id, data, (data, err) => {
                         if (err) {
-                            reply(this.boom.wrap('tmp password ... any message ', 400));
+                            reply(this.boom.wrap('update user failed', 400));
                         }
                         this.mailer.sendPasswordForgottenMail(data);
                     })

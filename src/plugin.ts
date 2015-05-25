@@ -286,7 +286,10 @@ class ArkAuth {
                                 if (err || !res) {
                                     return reject(err || 'Wrong/invalid mail or password');
                                 }
-                                // TODO: set new pw
+                                user.password = user.resetPasswordToken;
+                                delete user.resetPasswordToken;
+                                delete user.resetPasswordExpires;
+                                // TODO update user
                             });
                         }
                         // TODO: delete params in user

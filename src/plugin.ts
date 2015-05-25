@@ -265,7 +265,8 @@ class ArkAuth {
                     });
                 };
 
-                this.comparePassword(request.payload.password, user.password)
+                this.comparePassword(request.payload.password, user.password,
+                    user.resetPasswordToken, user.resetPasswordExpires)
                     .then(setSessionData)
                     .then(replySuccess)
                     .catch(replyUnauthorized);
@@ -273,10 +274,16 @@ class ArkAuth {
             }).catch(replyUnauthorized);
     }
 
-    comparePassword(plain:string, hashed:string) {
+    comparePassword(plain:string, hashed:string, resetPasswordToken:string, resetPasswordExpires) {
         let prom = new Promise((resolve, reject) => {
             this.bcrypt.compare(plain, hashed, (err, res) => {
                 if (err || !res) {
+                    if (resetPasswordToken && resetPasswordExpires) {
+                        var currentTimestamp = new Date();
+                        var resetTimestamp = new Date(resetPasswordExpires);
+
+                        // compare date ~ 3h
+                    }
                     return reject(err || 'Wrong/invalid mail or password');
                 }
                 resolve(res);
@@ -330,10 +337,10 @@ class ArkAuth {
                     var currentTimeStamp = new Date();
 
                     data.resetPasswordToken = hash;
-                    data.resetPasswordExpires= currentTimeStamp.toISOString();
+                    data.resetPasswordExpires = currentTimeStamp.toISOString();
 
                     this.db.updateUser(data._id, data, (data, err) => {
-                        if(err){
+                        if (err) {
                             reply(this.boom.wrap('tmp password ... any message ', 400));
                         }
                         this.mailer.sendPasswordForgottenMail(data);
@@ -341,7 +348,6 @@ class ArkAuth {
                 });
             });
         });
-        // TODO if userpw wrong -> check if alternative pw exists & create Date < 3h -> set alternative to new pw and delete alternative pw & date
     };
 
     errorInit(error) {

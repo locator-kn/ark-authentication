@@ -289,8 +289,12 @@ class ArkAuth {
                                 user.password = user.resetPasswordToken;
                                 delete user.resetPasswordToken;
                                 delete user.resetPasswordExpires;
-                                // TODO update user
-                            });
+                                this.db.updateUser(user._id, user, (err, data) => {
+                                    if (err) {
+                                        return reject(err);
+                                    }
+                                });
+                            })
                         }
                         // TODO: delete params in user
                     } else {

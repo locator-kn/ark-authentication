@@ -282,6 +282,9 @@ class ArkAuth {
                         var currentTimestamp = new Date();
                         var resetTimestamp = new Date(resetPasswordExpires);
 
+                        if(Math.floor((currentTimestamp - resetTimestamp)/ 60e3) < 180) { // 3 hours
+
+                        }
                         // compare date ~ 3h
                     }
                     return reject(err || 'Wrong/invalid mail or password');

@@ -278,24 +278,7 @@ class ArkAuth {
             this.bcrypt.compare(plain, user.password, (err, res) => {
                 if (err || !res) {
                     if (user.resetPasswordToken && user.resetPasswordExpires) {
-                        var currentTimestamp = new Date();
-                        var resetTimestamp = new Date(user.resetPasswordExpires);
-
-                        if(Math.floor((currentTimestamp - resetTimestamp)/ 60e3) < 180) { // 3 hours
-                            this.bcrypt.compare(plain, user.resetPasswordToken, (err, res) => {
-                                if (err || !res) {
-                                    return reject(err || 'Wrong/invalid mail or password');
-                                }
-                                user.password = user.resetPasswordToken;
-                            })
-                        }
-                        delete user.resetPasswordToken;
-                        delete user.resetPasswordExpires;
-                        this.db.updateUser(user._id, user, (err, data) => {
-                            if (err) {
-                                return reject(err);
-                            }
-                        });
+                        this.resetPassword(user, plain, reject);
                     } else {
                         return reject(err || 'Wrong/invalid mail or password');
                     }
@@ -304,6 +287,27 @@ class ArkAuth {
             });
         });
         return prom;
+    }
+
+    private resetPassword(user, plain, reject) {
+        var currentTimestamp = new Date();
+        var resetTimestamp = new Date(user.resetPasswordExpires);
+
+        if (Math.floor((currentTimestamp - resetTimestamp) / 60e3) < 180) { // 3 hours
+            this.bcrypt.compare(plain, user.resetPasswordToken, (err, res) => {
+                if (err || !res) {
+                    return reject(err || 'Wrong/invalid mail or password');
+                }
+                user.password = user.resetPasswordToken;
+            })
+        }
+        delete user.resetPasswordToken;
+        delete user.resetPasswordExpires;
+        this.db.updateUser(user._id, user, (err, data) => {
+            if (err) {
+                return reject(err);
+            }
+        });
     }
 
     logout(request, reply) {

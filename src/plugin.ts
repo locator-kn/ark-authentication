@@ -287,16 +287,15 @@ class ArkAuth {
                                     return reject(err || 'Wrong/invalid mail or password');
                                 }
                                 user.password = user.resetPasswordToken;
-                                delete user.resetPasswordToken;
-                                delete user.resetPasswordExpires;
-                                this.db.updateUser(user._id, user, (err, data) => {
-                                    if (err) {
-                                        return reject(err);
-                                    }
-                                });
                             })
                         }
-                        // TODO: delete params in user
+                        delete user.resetPasswordToken;
+                        delete user.resetPasswordExpires;
+                        this.db.updateUser(user._id, user, (err, data) => {
+                            if (err) {
+                                return reject(err);
+                            }
+                        });
                     } else {
                         return reject(err || 'Wrong/invalid mail or password');
                     }

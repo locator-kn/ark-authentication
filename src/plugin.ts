@@ -265,8 +265,7 @@ class ArkAuth {
                     });
                 };
 
-                this.comparePassword(request.payload.password, user.password,
-                    user.resetPasswordToken, user.resetPasswordExpires)
+                this.comparePassword(request.payload.password, user)
                     .then(setSessionData)
                     .then(replySuccess)
                     .catch(replyUnauthorized);
@@ -274,16 +273,16 @@ class ArkAuth {
             }).catch(replyUnauthorized);
     }
 
-    comparePassword(plain:string, hashed:string, resetPasswordToken:string, resetPasswordExpires) {
+    comparePassword(plain:string, user) {
         let prom = new Promise((resolve, reject) => {
-            this.bcrypt.compare(plain, hashed, (err, res) => {
+            this.bcrypt.compare(plain, user.password, (err, res) => {
                 if (err || !res) {
-                    if (resetPasswordToken && resetPasswordExpires) {
+                    if (user.resetPasswordToken && user.resetPasswordExpires) {
                         var currentTimestamp = new Date();
-                        var resetTimestamp = new Date(resetPasswordExpires);
+                        var resetTimestamp = new Date(user.resetPasswordExpires);
 
                         if(Math.floor((currentTimestamp - resetTimestamp)/ 60e3) < 180) { // 3 hours
-                            this.bcrypt.compare(plain, resetPasswordToken, (err, res) => {
+                            this.bcrypt.compare(plain, user.resetPasswordToken, (err, res) => {
                                 if (err || !res) {
                                     return reject(err || 'Wrong/invalid mail or password');
                                 }

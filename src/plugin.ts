@@ -321,11 +321,11 @@ class ArkAuth {
                     if (err) {
                         reply(this.boom.wrap('intern password generation failed.. (log)', 400));
                     }
-                    // TODO check err
-                    data.resetPasswordToken = hash;
-
                     var currentTimeStamp = new Date();
+
+                    data.resetPasswordToken = hash;
                     data.resetPasswordExpires= currentTimeStamp.toISOString();
+
                     this.db.updateUser(data._id, data, (data, err) => {
                         if(err){
                             reply(this.boom.wrap('tmp password ... any message ', 400));
@@ -335,12 +335,6 @@ class ArkAuth {
                 });
             });
 
-            // TODO update user
-
-            /*
-             resetPasswordToken: String,
-             resetPasswordExpires: Date
-             */
             // TODO create alternative pw and send per mail -> crypto in database
 
         });

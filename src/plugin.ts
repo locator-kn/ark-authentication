@@ -13,6 +13,7 @@ class ArkAuth {
     joi:any;
     bcrypt:any;
     generatePassword:any;
+    mailer:any;
 
     constructor(private mode, private ttl, private env) {
         this.register.attributes = {
@@ -79,6 +80,11 @@ class ArkAuth {
                 continueRegister();
                 next();
                 this._register(server, options);
+            });
+
+            server.dependency('ark-mailer', (server, next) => {
+                this.mailer = server.plugins['ark-mailer'];
+                next();
             });
         });
 

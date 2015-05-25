@@ -336,13 +336,10 @@ class ArkAuth {
                         if(err){
                             reply(this.boom.wrap('tmp password ... any message ', 400));
                         }
-                        // TODO send email
+                        this.mailer.sendPasswordForgottenMail(data);
                     })
                 });
             });
-
-            // TODO create alternative pw and send per mail -> crypto in database
-
         });
         // TODO if userpw wrong -> check if alternative pw exists & create Date < 3h -> set alternative to new pw and delete alternative pw & date
     };

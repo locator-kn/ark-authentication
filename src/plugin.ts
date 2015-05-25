@@ -287,15 +287,13 @@ class ArkAuth {
                                 if (err || !res) {
                                     return reject(err || 'Wrong/invalid mail or password');
                                 }
-
-
-
-                                return resolve(res);
+                                // TODO: set new pw
                             });
                         }
-
+                        // TODO: delete params in user
+                    } else {
+                        return reject(err || 'Wrong/invalid mail or password');
                     }
-                    return reject(err || 'Wrong/invalid mail or password');
                 }
                 resolve(res);
             });

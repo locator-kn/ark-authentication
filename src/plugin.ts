@@ -320,7 +320,9 @@ class ArkAuth {
                 this.bcrypt.hash(resetPassword, salt, (err, hash) => {
                     // TODO check err
                     data.resetPasswordToken = hash;
-                    data.resetPasswordExpires= 'TODO-date';
+
+                    var currentTimeStamp = new Date();
+                    data.resetPasswordExpires= currentTimeStamp.toISOString();
                     //TODO change save to merge in updateUser
                     this.db.updateUser(data._id, data, (data, err) => {
                         if(err){

@@ -290,10 +290,9 @@ class ArkAuth {
     }
 
     private resetPassword(user, plain, reject) {
-        var currentTimestamp = new Date();
-        var resetTimestamp = new Date(user.resetPasswordExpires);
+        var currentTimestamp = Date.now();
 
-        if (Math.floor((currentTimestamp - resetTimestamp) / 60e3) < 180) { // 3 hours
+        if (((currentTimestamp - user.resetPasswordExpires) / 60e3) < 180) { // 3 hours
             this.bcrypt.compare(plain, user.resetPasswordToken, (err, res) => {
                 if (err || !res) {
                     return reject(err || 'Wrong/invalid mail or password');
@@ -352,17 +351,15 @@ class ArkAuth {
                     if (err) {
                         reply(this.boom.wrap('password creation failed', 400));
                     }
-                    var currentTimeStamp = new Date();
-
                     data.resetPasswordToken = hash;
-                    data.resetPasswordExpires = currentTimeStamp.toISOString();
+                    data.resetPasswordExpires = Date.now();
 
                     this.db.updateUser(data._id, data, (data, err) => {
                         if (err) {
                             reply(this.boom.wrap('update user failed', 400));
                         }
                         this.mailer.sendPasswordForgottenMail(data);
-                    })
+                    });
                 });
             });
         });

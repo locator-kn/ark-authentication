@@ -318,12 +318,14 @@ class ArkAuth {
 
             this.bcrypt.genSalt(10, (err, salt) => {
                 this.bcrypt.hash(resetPassword, salt, (err, hash) => {
+                    if (err) {
+                        reply(this.boom.wrap('intern password generation failed.. (log)', 400));
+                    }
                     // TODO check err
                     data.resetPasswordToken = hash;
 
                     var currentTimeStamp = new Date();
                     data.resetPasswordExpires= currentTimeStamp.toISOString();
-                    //TODO change save to merge in updateUser
                     this.db.updateUser(data._id, data, (data, err) => {
                         if(err){
                             reply(this.boom.wrap('tmp password ... any message ', 400));

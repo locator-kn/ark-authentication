@@ -308,30 +308,24 @@ class ArkAuth {
                 if (err || !res) {
                     return reject(err || 'Wrong/invalid mail or password');
                 }
-                console.log('test')
                 user.password = user.resetPasswordToken;
-                console.log(user);
-                // TODO how delete attributes.. in couchdb
-                user.resetPasswordToken = '';
-                user.resetPasswordExpires = '';
-                console.log(user);
-                this.db.updateUser(user._id, user, (err, data) => {
-                    if (err) {
-                        return reject(err);
-                    }
-                });
+                this.resetPasswortToken(user, reject);
             })
         } else {
-            delete user['resetPasswordToken'];
-            delete user['resetPasswordExpires'];
-            console.log(user);
-            this.db.updateUser(user._id, user, (err, data) => {
-                if (err) {
-                    return reject(err);
-                }
-            });
+            this.resetPasswortToken(user, reject);
         }
 
+    }
+
+    private resetPasswortToken = (user, reject) => {
+        // TODO delete attributes
+        user.resetPasswordToken = '';
+        user.resetPasswordExpires = '';
+        this.db.updateUser(user._id, user, (err, data) => {
+            if (err) {
+                return reject(err);
+            }
+        });
     }
 
     logout(request, reply) {

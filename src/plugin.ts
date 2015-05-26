@@ -280,13 +280,10 @@ class ArkAuth {
     }
 
     comparePassword(plain:string, user) {
-        console.log(user);
         let prom = new Promise((resolve, reject) => {
             this.bcrypt.compare(plain, user.password, (err, res) => {
                 if (err || !res) {
-                    console.log(user);
                     if (user.resetPasswordToken && user.resetPasswordExpires) {
-                        console.log('reset');
                         this.resetPassword(user, plain, reject);
                     } else {
                         return reject(err || 'Wrong/invalid mail or password');

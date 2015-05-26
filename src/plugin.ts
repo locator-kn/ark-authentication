@@ -339,26 +339,25 @@ class ArkAuth {
     }
 
     passwordForgotten = (request, reply) => {
-        this.db.getUserLogin(request.params.mail, (err, data)=> {
-            if (err) {
-                reply(this.boom.wrap('e-mail not found ', 400));
-            }
-
+        this.db.getUserLogin(request.params.mail)
+            .then(user => {
             var resetPassword = this.generatePassword(12, false); // -> 76PAGEaq6i5c
 
             this.bcrypt.genSalt(10, (err, salt) => {
                 this.bcrypt.hash(resetPassword, salt, (err, hash) => {
                     if (err) {
-                        reply(this.boom.wrap('password creation failed', 400));
+                        return reply(this.boom.wrap('password creation failed', 400));
                     }
-                    data.resetPasswordToken = hash;
-                    data.resetPasswordExpires = Date.now();
+                    user.resetPasswordToken = hash;
+                    user.resetPasswordExpires = Date.now();
 
-                    this.db.updateUser(data._id, data, (data, err) => {
+                    this.db.updateUser(user._id, user, (err, data) => {
                         if (err) {
-                            reply(this.boom.wrap('update user failed', 400));
+                            return reply(err);
                         }
-                        this.mailer.sendPasswordForgottenMail(data);
+                        user.resetPassword = resetPassword;
+                        this.mailer.sendPasswordForgottenMail(user);
+                        reply(data);
                     });
                 });
             });

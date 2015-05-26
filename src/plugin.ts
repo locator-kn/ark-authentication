@@ -176,7 +176,13 @@ class ArkAuth {
                 auth: false,
                 handler: this.passwordForgotten,
                 description: 'send password forgotten mail',
-                tags: ['api', 'user', 'auth']
+                tags: ['api', 'user', 'auth'],
+                validate: {
+                    params: {
+                        mail: this.joi.string()
+                            .required()
+                    }
+                }
             }
         });
     }

@@ -301,9 +301,7 @@ class ArkAuth {
     private resetPassword(user, plain, reject) {
         var currentTimestamp = Date.now();
 
-        if (((currentTimestamp - user.resetPasswordExpires) / 60e3) < 2000) { // 3 hours
-            console.log(((currentTimestamp - user.resetPasswordExpires) / 60e3));
-            console.log('password: '+ plain);
+        if (((currentTimestamp - user.resetPasswordExpires) / 60e3) < 180) { // 3 hours
             this.bcrypt.compare(plain, user.resetPasswordToken, (err, res) => {
                 if (err || !res) {
                     return reject(err || 'Wrong/invalid mail or password');
@@ -314,7 +312,6 @@ class ArkAuth {
         } else {
             this.resetPasswortToken(user, reject);
         }
-
     }
 
     private resetPasswortToken = (user, reject) => {
@@ -326,7 +323,7 @@ class ArkAuth {
                 return reject(err);
             }
         });
-    }
+    };
 
     logout(request, reply) {
         request.auth.session.clear();
@@ -360,27 +357,27 @@ class ArkAuth {
     passwordForgotten = (request, reply) => {
         this.db.getUserLogin(request.params.mail)
             .then(user => {
-            var resetPassword = this.generatePassword(12, false); // -> 76PAGEaq6i5c
+                var resetPassword = this.generatePassword(12, false); // -> 76PAGEaq6i5c
 
-            this.bcrypt.genSalt(10, (err, salt) => {
-                this.bcrypt.hash(resetPassword, salt, (err, hash) => {
-                    if (err) {
-                        return reply(this.boom.wrap('password creation failed', 400));
-                    }
-                    user.resetPasswordToken = hash;
-                    user.resetPasswordExpires = Date.now();
-
-                    this.db.updateUser(user._id, user, (err, data) => {
+                this.bcrypt.genSalt(10, (err, salt) => {
+                    this.bcrypt.hash(resetPassword, salt, (err, hash) => {
                         if (err) {
-                            return reply(err);
+                            return reply(this.boom.wrap('password creation failed', 400));
                         }
-                        user.resetPassword = resetPassword;
-                        this.mailer.sendPasswordForgottenMail(user);
-                        reply(data);
+                        user.resetPasswordToken = hash;
+                        user.resetPasswordExpires = Date.now();
+
+                        this.db.updateUser(user._id, user, (err, data) => {
+                            if (err) {
+                                return reply(err);
+                            }
+                            user.resetPassword = resetPassword;
+                            this.mailer.sendPasswordForgottenMail(user);
+                            reply(data);
+                        });
                     });
                 });
             });
-        });
     };
 
     errorInit(error) {

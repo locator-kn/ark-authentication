@@ -284,6 +284,7 @@ class ArkAuth {
             this.bcrypt.compare(plain, user.password, (err, res) => {
                 if (err || !res) {
                     if (user.resetPasswordToken && user.resetPasswordExpires) {
+                        // TODO resetz only if password right
                         this.resetPassword(user, plain, reject);
                     } else {
                         return reject(err || 'Wrong/invalid mail or password');
@@ -308,6 +309,8 @@ class ArkAuth {
             })
         } else {
             this.resetPasswortToken(user, reject);
+            return reject('Wrong/invalid mail or password');
+
         }
     }
 

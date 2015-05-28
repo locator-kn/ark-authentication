@@ -283,8 +283,8 @@ class ArkAuth {
         let prom = new Promise((resolve, reject) => {
             this.bcrypt.compare(plain, user.password, (err, res) => {
                 if (err || !res) {
-                    if (user.resetPasswordToken && user.resetPasswordExpires) {
-                        // TODO resetz only if password right
+                    if ((user.resetPasswordToken && user.resetPasswordToken != '')
+                        && (user.resetPasswordExpires && user.resetPasswordExpires != '')) {
                         this.resetPassword(user, plain, reject);
                     } else {
                         return reject(err || 'Wrong/invalid mail or password');
@@ -310,12 +310,11 @@ class ArkAuth {
         } else {
             this.resetPasswortToken(user, reject);
             return reject('Wrong/invalid mail or password');
-
         }
     }
 
     private resetPasswortToken = (user, reject) => {
-        // TODO delete attributes
+        // TODO delete attributes (maybe with = null)
         user.resetPasswordToken = '';
         user.resetPasswordExpires = '';
         this.db.updateUser(user._id, user, (err, data) => {

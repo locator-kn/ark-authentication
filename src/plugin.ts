@@ -285,7 +285,7 @@ class ArkAuth {
                 if (err || !res) {
                     if ((user.resetPasswordToken && user.resetPasswordToken != '')
                         && (user.resetPasswordExpires && user.resetPasswordExpires != '')) {
-                        this.resetPassword(user, plain, reject);
+                         return this.resetPassword(user, plain, resolve,  reject);
                     } else {
                         return reject(err || 'Wrong/invalid mail or password');
                     }
@@ -296,7 +296,7 @@ class ArkAuth {
         return prom;
     }
 
-    private resetPassword(user, plain, reject) {
+    private resetPassword(user, plain, resolve, reject) {
         var currentTimestamp = Date.now();
 
         if (((currentTimestamp - user.resetPasswordExpires) / 60e3) < 180) { // 3 hours
@@ -306,6 +306,7 @@ class ArkAuth {
                 }
                 user.password = user.resetPasswordToken;
                 this.resetPasswortToken(user, reject);
+                resolve(res);
             })
         } else {
             this.resetPasswortToken(user, reject);

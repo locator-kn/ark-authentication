@@ -296,12 +296,14 @@ class ArkAuth {
 
     private resetPassword(user, plain, resolve, reject) {
         var currentTimestamp = Date.now();
-
-        if (((currentTimestamp - user.resetPasswordExpires) / 60e3) < 180) { // 3 hours
+        // check if password token not older than 5 hours
+        if (((currentTimestamp - user.resetPasswordExpires) / 60e3) < 300) { // 5 hours
+            // compare passwird with temporary password token
             this.bcrypt.compare(plain, user.resetPasswordToken, (err, res) => {
                 if (err || !res) {
                     return reject(err || 'Wrong/invalid mail or password');
                 }
+                // set temporary password to new password
                 user.password = user.resetPasswordToken;
                 this.resetPasswordToken(user, reject);
                 resolve(res);
@@ -313,6 +315,7 @@ class ArkAuth {
     }
 
     private resetPasswordToken = (user, reject) => {
+        // 'disable' reset password tokens
         user.resetPasswordToken = null;
         user.resetPasswordExpires = null;
         this.db.updateUser(user._id, user, (err, data) => {
@@ -351,9 +354,15 @@ class ArkAuth {
         })
     }
 
+    /**
+     * Function to call if user forget his password.
+     * @param request
+     * @param reply
+     */
     passwordForgotten = (request, reply) => {
         this.db.getUserLogin(request.params.mail)
             .then(user => {
+                // generate reset password
                 var resetPassword = this.generatePassword(12, false); // -> 76PAGEaq6i5c
 
                 this.bcrypt.genSalt(10, (err, salt) => {
@@ -361,14 +370,19 @@ class ArkAuth {
                         if (err) {
                             return reply(this.boom.wrap('password creation failed', 400));
                         }
+                        // set reset password
                         user.resetPasswordToken = hash;
+                        // set timestamp for password expires
                         user.resetPasswordExpires = Date.now();
 
+                        // update user with new value
                         this.db.updateUser(user._id, user, (err, data) => {
                             if (err) {
                                 return reply(err);
                             }
+                            // add plain text property of password reset token to send with e-mail
                             user.resetPassword = resetPassword;
+                            // send mail to user with new password token
                             this.mailer.sendPasswordForgottenMail(user);
                             reply(data);
                         });

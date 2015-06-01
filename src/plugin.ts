@@ -303,16 +303,16 @@ class ArkAuth {
                     return reject(err || 'Wrong/invalid mail or password');
                 }
                 user.password = user.resetPasswordToken;
-                this.resetPasswortToken(user, reject);
+                this.resetPasswordToken(user, reject);
                 resolve(res);
             })
         } else {
-            this.resetPasswortToken(user, reject);
+            this.resetPasswordToken(user, reject);
             return reject('Wrong/invalid mail or password');
         }
     }
 
-    private resetPasswortToken = (user, reject) => {
+    private resetPasswordToken = (user, reject) => {
         user.resetPasswordToken = null;
         user.resetPasswordExpires = null;
         this.db.updateUser(user._id, user, (err, data) => {

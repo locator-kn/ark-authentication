@@ -280,7 +280,7 @@ class ArkAuth {
     }
 
     comparePassword(plain:string, user) {
-        let prom = new Promise((resolve, reject) => {
+        return new Promise((resolve, reject) => {
             this.bcrypt.compare(plain, user.password, (err, res) => {
                 if (err || !res) {
                     if (user.resetPasswordToken && user.resetPasswordExpires) {
@@ -292,7 +292,6 @@ class ArkAuth {
                 resolve(res);
             });
         });
-        return prom;
     }
 
     private resetPassword(user, plain, resolve, reject) {

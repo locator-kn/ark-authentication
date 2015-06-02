@@ -377,10 +377,9 @@ class ArkAuth {
 
                 function replySuccess() {
                     reply({
-                        message: 'New password generated and send per mail.'
+                        message: 'New password generated and sent per mail.'
                     });
                 }
-
 
                 this.generatePasswordToken(user)
                     .then(this.updatePasswordToken)
@@ -403,7 +402,9 @@ class ArkAuth {
                         return reject(err);
                     }
                     user.resetPasswordToken = hash;
-                    resolve(user, resetPassword)
+                    console.log(resetPassword);
+                    user.resetPassword = resetPassword;
+                    resolve(user)
                 })
             })
 
@@ -415,10 +416,13 @@ class ArkAuth {
         this.mailer.sendPasswordForgottenMail(user);
     };
 
-    updatePasswordToken = (user, resetPassword) => {
+    updatePasswordToken = (user) => {
         return new Promise((resolve, reject) => {
             // set timestamp for password expires
             user.resetPasswordExpires = Date.now();
+            // tmp remove of plain text variable
+            var resetPassword = user.resetPassword;
+            delete user.resetPassword;
             // update user with new value
             this.db.updateUser(user._id, user, (err, data) => {
                 if (err) {
@@ -426,8 +430,7 @@ class ArkAuth {
 
                     return reject(err);
                 }
-                console.log('asdf');
-                console.log(data);
+                // add plain text variable for email
                 user.resetPassword = resetPassword;
                 resolve(user);
             });

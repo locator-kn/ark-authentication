@@ -260,13 +260,13 @@ class ArkAuth {
             reply(b.unauthorized(reason));
         }
 
-        function checkForResetPassword(plain, user) => {
+        function checkForResetPassword(plain:string, user) => {
             return new Promise((resolve, reject) => {
                 if (user.resetPasswordToken && user.resetPasswordExpires) {
                     var currentTimestamp = Date.now();
                     // check if password token not older than 5 hours
                     if (((currentTimestamp - user.resetPasswordExpires) / 60e3) < 300) { // 5 hours
-                        return resolve(plain, user.password);
+                        return resolve(plain, user);
                     }
                 }
                 reject();
@@ -289,7 +289,7 @@ class ArkAuth {
                     .then(replySuccess)
                     // TODO: parameter anders mitgeben? Im reject?
                     .catch(checkForResetPassword(request.payload.password, user))
-                    .then(compareResetPassword)
+                    .then(this.compareResetPassword)
                     .then(resetUserPW)
                     .then(setSessionData)
                     .then(replySuccess)
@@ -305,6 +305,17 @@ class ArkAuth {
                     return reject(err || 'Wrong/invalid mail or password');
                 }
                 resolve(res);
+            });
+        });
+    }
+
+    compareResetPassword(plain:string, user) {
+        return new Promise((resolve, reject) => {
+            this.bcrypt.compare(plain, user.password, (err, res) => {
+                if (err || !res) {
+                    return reject(err || 'Wrong/invalid mail or password');
+                }
+                resolve(user);
             });
         });
     }

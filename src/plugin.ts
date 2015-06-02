@@ -278,7 +278,7 @@ class ArkAuth {
                     // TODO: parameter anders mitgeben? Im reject?
                     .catch(this.checkForResetPassword(request.payload.password, user))
                     .then(this.compareResetPassword)
-                    .then(resetUserPW)
+                    .then(resetUserPassword)
                     .then(setSessionData)
                     .then(replySuccess)
                     .catch(replyUnauthorized);
@@ -318,6 +318,22 @@ class ArkAuth {
                 }
             }
             reject();
+        });
+    }
+
+    resetUserPassword(user) {
+        return new Promise((resolve, reject) => {
+            // set temporary password to new password
+            user.password = user.resetPasswordToken;
+            // 'disable' reset password tokens
+            user.resetPasswordToken = null;
+            user.resetPasswordExpires = null;
+            this.db.updateUser(user._id, user, (err, data) => {
+                if (err) {
+                    return reject(err);
+                }
+            });
+            resolve();
         });
     }
 

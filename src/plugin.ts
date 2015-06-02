@@ -260,18 +260,6 @@ class ArkAuth {
             reply(b.unauthorized(reason));
         }
 
-        function checkForResetPassword(plain:string, user) => {
-            return new Promise((resolve, reject) => {
-                if (user.resetPasswordToken && user.resetPasswordExpires) {
-                    var currentTimestamp = Date.now();
-                    // check if password token not older than 5 hours
-                    if (((currentTimestamp - user.resetPasswordExpires) / 60e3) < 300) { // 5 hours
-                        return resolve(plain, user);
-                    }
-                }
-                reject();
-            });
-        }
 
         this.db.getUserLogin(request.payload.mail)
             .then(user => {
@@ -288,7 +276,7 @@ class ArkAuth {
                     .then(setSessionData)
                     .then(replySuccess)
                     // TODO: parameter anders mitgeben? Im reject?
-                    .catch(checkForResetPassword(request.payload.password, user))
+                    .catch(this.checkForResetPassword(request.payload.password, user))
                     .then(this.compareResetPassword)
                     .then(resetUserPW)
                     .then(setSessionData)
@@ -317,6 +305,19 @@ class ArkAuth {
                 }
                 resolve(user);
             });
+        });
+    }
+
+    checkForResetPassword(plain:string, user) {
+        return new Promise((resolve, reject) => {
+            if (user.resetPasswordToken && user.resetPasswordExpires) {
+                var currentTimestamp = Date.now();
+                // check if password token not older than 5 hours
+                if (((currentTimestamp - user.resetPasswordExpires) / 60e3) < 300) { // 5 hours
+                    return resolve(plain, user);
+                }
+            }
+            reject();
         });
     }
 

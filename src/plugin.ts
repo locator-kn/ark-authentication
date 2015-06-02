@@ -278,7 +278,7 @@ class ArkAuth {
                     // TODO: parameter anders mitgeben? Im reject?
                     .catch(this.checkForResetPassword(request.payload.password, user))
                     .then(this.compareResetPassword)
-                    .then(resetUserPassword)
+                    .then(this.resetUserPassword)
                     .then(setSessionData)
                     .then(replySuccess)
                     .catch(replyUnauthorized);

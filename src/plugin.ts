@@ -295,15 +295,11 @@ class ArkAuth {
             }).catch(replyUnauthorized);
     }
 
-    comparePassword(plain:string, user) {
+    comparePassword(plain:string, password) {
         return new Promise((resolve, reject) => {
-            this.bcrypt.compare(plain, user.password, (err, res) => {
+            this.bcrypt.compare(plain, password, (err, res) => {
                 if (err || !res) {
-                    if (user.resetPasswordToken && user.resetPasswordExpires) {
-                        return this.resetPassword(user, plain, resolve, reject);
-                    } else {
-                        return reject(err || 'Wrong/invalid mail or password');
-                    }
+                    return reject(err || 'Wrong/invalid mail or password');
                 }
                 resolve(res);
             });

@@ -385,28 +385,32 @@ class ArkAuth {
                             if (err) {
                                 return reject(err);
                             }
-                            resolve(user);
+                            resolve(tokens.resetPassword);
                         });
+                    });
+                }
+
+                function sendMail(resetPassword) {
+                    // add plain text property of password reset token to send with e-mail
+                    user.resetPassword = resetPassword;
+                    // send mail to user with new password token
+                    this.mailer.sendPasswordForgottenMail(user);
+                }
+
+                function replySuccess() {
+                    reply({
+                        message: 'Hi there'
                     });
                 }
 
 
                 this.generatePasswordToken()
                     .then(updatePasswordToken)
-                //.catch(function(err){
-                //        reply(err);
-                //    });
-                //        user.resetPasswordToken = hash;
-                //        user.resetPasswordExpires = Date.now();
-
-
-                // add plain text property of password reset token to send with e-mail
-                //user.resetPassword = resetPassword;
-                // send mail to user with new password token
-                //this.mailer.sendPasswordForgottenMail(user);
-                //reply(data);
-                //});
-                //});
+                    .then(sendMail)
+                    .then(replySuccess)
+                    .catch(function (err) {
+                        reply(err);
+                    });
             });
     };
 
@@ -420,7 +424,7 @@ class ArkAuth {
                     if (err) {
                         return reject(err);
                     }
-                    resolve({resetPasswordToken: hash})
+                    resolve({resetPasswordToken: hash, resetPassword: resetPassword})
                 })
             })
 

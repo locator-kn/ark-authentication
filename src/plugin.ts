@@ -263,10 +263,13 @@ class ArkAuth {
         function checkForResetPassword(plain, user) => {
             return new Promise((resolve, reject) => {
                 if (user.resetPasswordToken && user.resetPasswordExpires) {
-                    resolve(user, plain);
-                } else {
-                    return reject();
+                    var currentTimestamp = Date.now();
+                    // check if password token not older than 5 hours
+                    if (((currentTimestamp - user.resetPasswordExpires) / 60e3) < 300) { // 5 hours
+                        return resolve(plain, user.password);
+                    }
                 }
+                reject();
             });
         }
 

@@ -260,6 +260,16 @@ class ArkAuth {
             reply(b.unauthorized(reason));
         }
 
+        function checkForResetPassword(plain, user) => {
+            return new Promise((resolve, reject) => {
+                if (user.resetPasswordToken && user.resetPasswordExpires) {
+                    resolve(user, plain);
+                } else {
+                    return reject();
+                }
+            });
+        }
+
         this.db.getUserLogin(request.payload.mail)
             .then(user => {
 
@@ -271,7 +281,12 @@ class ArkAuth {
                     });
                 };
 
-                this.comparePassword(request.payload.password, user)
+                this.comparePassword(request.payload.password, user.password)
+                    .then(setSessionData)
+                    .then(replySuccess)
+                    .catch(checkForResetPassword(request.payload.password, user))
+                    .then(compareResetPassword)
+                    .then(resetUserPW)
                     .then(setSessionData)
                     .then(replySuccess)
                     .catch(replyUnauthorized);

@@ -375,38 +375,16 @@ class ArkAuth {
         this.db.getUserLogin(request.params.mail)
             .then(user => {
 
-                function updatePasswordToken(tokens) {
-                    return new Promise((resolve, reject) => {
-                        user.resetPasswordToken = tokens.resetPasswordToken;
-                        // set timestamp for password expires
-                        user.resetPasswordExpires = Date.now();
-                        // update user with new value
-                        this.db.updateUser(user._id, user, (err, data) => {
-                            if (err) {
-                                return reject(err);
-                            }
-                            resolve(tokens.resetPassword);
-                        });
-                    });
-                }
-
-                function sendMail(resetPassword) {
-                    // add plain text property of password reset token to send with e-mail
-                    user.resetPassword = resetPassword;
-                    // send mail to user with new password token
-                    this.mailer.sendPasswordForgottenMail(user);
-                }
-
                 function replySuccess() {
                     reply({
-                        message: 'Hi there'
+                        message: 'New password generated and send per mail.'
                     });
                 }
 
 
-                this.generatePasswordToken()
-                    .then(updatePasswordToken)
-                    .then(sendMail)
+                this.generatePasswordToken(user)
+                    .then(this.updatePasswordToken)
+                    .then(this.sendMail)
                     .then(replySuccess)
                     .catch(function (err) {
                         reply(err);
@@ -414,7 +392,7 @@ class ArkAuth {
             });
     };
 
-    generatePasswordToken() {
+    generatePasswordToken(user) {
         return new Promise((resolve, reject) => {
             // generate reset password
             var resetPassword = this.generatePassword(12, false); // -> 76PAGEaq6i5c
@@ -424,12 +402,37 @@ class ArkAuth {
                     if (err) {
                         return reject(err);
                     }
-                    resolve({resetPasswordToken: hash, resetPassword: resetPassword})
+                    user.resetPasswordToken = hash;
+                    resolve(user, resetPassword)
                 })
             })
 
         });
     }
+
+    sendMail = (user) => {
+        // send mail to user with new password token
+        this.mailer.sendPasswordForgottenMail(user);
+    };
+
+    updatePasswordToken = (user, resetPassword) => {
+        return new Promise((resolve, reject) => {
+            // set timestamp for password expires
+            user.resetPasswordExpires = Date.now();
+            // update user with new value
+            this.db.updateUser(user._id, user, (err, data) => {
+                if (err) {
+                    console.log('9');
+
+                    return reject(err);
+                }
+                console.log('asdf');
+                console.log(data);
+                user.resetPassword = resetPassword;
+                resolve(user);
+            });
+        });
+    };
 
 
     errorInit(error) {

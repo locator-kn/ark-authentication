@@ -337,37 +337,6 @@ class ArkAuth {
         });
     }
 
-    private resetPassword(user, plain, resolve, reject) {
-        var currentTimestamp = Date.now();
-        // check if password token not older than 5 hours
-        if (((currentTimestamp - user.resetPasswordExpires) / 60e3) < 300) { // 5 hours
-            // compare passwird with temporary password token
-            this.bcrypt.compare(plain, user.resetPasswordToken, (err, res) => {
-                if (err || !res) {
-                    return reject(err || 'Wrong/invalid mail or password');
-                }
-                // set temporary password to new password
-                user.password = user.resetPasswordToken;
-                this.resetPasswordToken(user, reject);
-                resolve(res);
-            })
-        } else {
-            this.resetPasswordToken(user, reject);
-            return reject('Wrong/invalid mail or password');
-        }
-    }
-
-    private resetPasswordToken = (user, reject) => {
-        // 'disable' reset password tokens
-        user.resetPasswordToken = null;
-        user.resetPasswordExpires = null;
-        this.db.updateUser(user._id, user, (err, data) => {
-            if (err) {
-                return reject(err);
-            }
-        });
-    };
-
     logout(request, reply) {
         request.auth.session.clear();
         reply({

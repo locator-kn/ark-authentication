@@ -275,13 +275,20 @@ class ArkAuth {
                 this.comparePassword(request.payload.password, user.password)
                     .then(setSessionData)
                     .then(replySuccess)
-                    // TODO: parameter anders mitgeben? Im reject?
-                    .catch(this.checkForResetPassword(request.payload.password, user))
-                    .then(this.compareResetPassword)
-                    .then(this.resetUserPassword)
-                    .then(setSessionData)
-                    .then(replySuccess)
-                    .catch(replyUnauthorized);
+                    .catch(() => {
+
+                        this.checkForResetPassword(user)
+                            .then(()=> {
+                                return this.compareResetPassword(request.payload.password, user);
+                            })
+                            .then((user) => {
+                                return this.resetUserPassword(user);
+                            })
+                            .then(setSessionData)
+                            .then(replySuccess)
+                            .catch(replyUnauthorized);
+                    })
+
 
             }).catch(replyUnauthorized);
     }
@@ -299,7 +306,7 @@ class ArkAuth {
 
     compareResetPassword(plain:string, user) {
         return new Promise((resolve, reject) => {
-            this.bcrypt.compare(plain, user.password, (err, res) => {
+            this.bcrypt.compare(plain, user.resetPasswordToken, (err, res) => {
                 if (err || !res) {
                     return reject(err || 'Wrong/invalid mail or password');
                 }
@@ -308,13 +315,13 @@ class ArkAuth {
         });
     }
 
-    checkForResetPassword(plain:string, user) {
+    checkForResetPassword(user) {
         return new Promise((resolve, reject) => {
             if (user.resetPasswordToken && user.resetPasswordExpires) {
                 var currentTimestamp = Date.now();
                 // check if password token not older than 5 hours
                 if (((currentTimestamp - user.resetPasswordExpires) / 60e3) < 300) { // 5 hours
-                    return resolve(plain, user);
+                    return resolve();
                 }
             }
             reject();

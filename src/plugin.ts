@@ -403,6 +403,23 @@ class ArkAuth {
             });
     };
 
+    private generatePasswordToken = () => {
+        return new Promise((resolve, reject) => {
+            // generate reset password
+            var resetPassword = this.generatePassword(12, false); // -> 76PAGEaq6i5c
+
+            this.bcrypt.genSalt(10, (err, salt) => {
+                this.bcrypt.hash(resetPassword, salt, (err, hash) => {
+                    if (err) {
+                        return reject(err);
+                    }
+                    resolve({resetPasswordToken: hash, resetPasswordExpires: Date.now()})
+                })
+            })
+
+        });
+    };
+
     errorInit(error) {
         if (error) {
             console.log('Error: Failed to load plugin (ArkAuth):', error);

@@ -141,7 +141,7 @@ class ArkAuth {
                     payload: {
                         mail: this.joi.string().email().min(3).max(30).required()
                             .description('Mail address'),
-                        password: this.joi.string().regex(/[a-zA-Z0-9_]{3,30}/).required()
+                        password: this.joi.string().regex(/[a-zA-Z0-9@#$%_&!"§\/\(\)=\?\^]{3,30}/).required()
                             .description('User set password')
                     }
                 }

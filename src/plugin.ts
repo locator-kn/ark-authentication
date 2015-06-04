@@ -261,7 +261,7 @@ class ArkAuth {
         }
 
 
-        this.db.getUserLogin(request.payload.mail)
+        this.db.getUserLogin(request.payload.mail.toLowerCase())
             .then(user => {
 
                 let setSessionData = () => {

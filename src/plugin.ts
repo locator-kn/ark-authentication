@@ -12,6 +12,8 @@ class ArkAuth {
     boom:any;
     joi:any;
     bcrypt:any;
+    generatePassword:any;
+    mailer:any;
 
     constructor(private mode, private ttl, private env) {
         this.register.attributes = {
@@ -20,6 +22,7 @@ class ArkAuth {
         this.boom = require('boom');
         this.joi = require('joi');
         this.bcrypt = require('bcrypt');
+        this.generatePassword = require('password-generator');
     }
 
     register:IRegister = (server, options, next) => {
@@ -78,6 +81,11 @@ class ArkAuth {
                 next();
                 this._register(server, options);
             });
+
+            server.dependency('ark-mailer', (server, next) => {
+                this.mailer = server.plugins['ark-mailer'];
+                next();
+            });
         });
 
         this._register(server, options);
@@ -133,7 +141,7 @@ class ArkAuth {
                     payload: {
                         mail: this.joi.string().email().min(3).max(30).required()
                             .description('Mail address'),
-                        password: this.joi.string().alphanum().min(3).max(30).required()
+                        password: this.joi.string().regex(/[a-zA-Z0-9@#$%_&!"§\/\(\)=\?\^]{3,30}/).required()
                             .description('User set password')
                     }
                 }
@@ -158,6 +166,23 @@ class ArkAuth {
                 handler: this.confirm,
                 description: 'confirm registration of user by uuid',
                 tags: ['api', 'user', 'auth']
+            }
+        });
+
+        server.route({
+            method: ['GET'],
+            path: '/forgot/{mail}',
+            config: {
+                auth: false,
+                handler: this.passwordForgotten,
+                description: 'send password forgotten mail',
+                tags: ['api', 'user', 'auth'],
+                validate: {
+                    params: {
+                        mail: this.joi.string()
+                            .required()
+                    }
+                }
             }
         });
     }
@@ -196,7 +221,7 @@ class ArkAuth {
                     };
 
                     this.db.createUser(newUser, (err, data) => {
-                        
+
                         if (err) {
                             return reply(this.boom.wrap(err, 400));
                         }
@@ -235,6 +260,7 @@ class ArkAuth {
             reply(b.unauthorized(reason));
         }
 
+
         this.db.getUserLogin(request.payload.mail.toLowerCase())
             .then(user => {
 
@@ -249,21 +275,73 @@ class ArkAuth {
                 this.comparePassword(request.payload.password, user.password)
                     .then(setSessionData)
                     .then(replySuccess)
-                    .catch(replyUnauthorized);
+                    .catch(() => {
+
+                        this.checkForResetPassword(user)
+                            .then(()=> {
+                                return this.compareResetPassword(request.payload.password, user);
+                            })
+                            .then((user) => {
+                                return this.resetUserPassword(user);
+                            })
+                            .then(setSessionData)
+                            .then(replySuccess)
+                            .catch(replyUnauthorized);
+                    })
+
 
             }).catch(replyUnauthorized);
     }
 
-    comparePassword(plain:string, hashed:string) {
-        let prom = new Promise((resolve, reject) => {
-            this.bcrypt.compare(plain, hashed, (err, res) => {
+    comparePassword(plain:string, password) {
+        return new Promise((resolve, reject) => {
+            this.bcrypt.compare(plain, password, (err, res) => {
                 if (err || !res) {
                     return reject(err || 'Wrong/invalid mail or password');
                 }
                 resolve(res);
             });
         });
-        return prom;
+    }
+
+    compareResetPassword(plain:string, user) {
+        return new Promise((resolve, reject) => {
+            this.bcrypt.compare(plain, user.resetPasswordToken, (err, res) => {
+                if (err || !res) {
+                    return reject(err || 'Wrong/invalid mail or password');
+                }
+                resolve(user);
+            });
+        });
+    }
+
+    checkForResetPassword(user) {
+        return new Promise((resolve, reject) => {
+            if (user.resetPasswordToken && user.resetPasswordExpires) {
+                var currentTimestamp = Date.now();
+                // check if password token not older than 5 hours
+                if (((currentTimestamp - user.resetPasswordExpires) / 60e3) < 300) { // 5 hours
+                    return resolve();
+                }
+            }
+            reject();
+        });
+    }
+
+    resetUserPassword(user) {
+        return new Promise((resolve, reject) => {
+            // set temporary password to new password
+            user.password = user.resetPasswordToken;
+            // 'disable' reset password tokens
+            user.resetPasswordToken = null;
+            user.resetPasswordExpires = null;
+            this.db.updateUser(user._id, user, (err, data) => {
+                if (err) {
+                    return reject(err);
+                }
+            });
+            resolve();
+        });
     }
 
     logout(request, reply) {
@@ -294,6 +372,78 @@ class ArkAuth {
             }
         })
     }
+
+    /**
+     * Function to call if user forget his password.
+     * @param request
+     * @param reply
+     */
+    passwordForgotten = (request, reply) => {
+        this.db.getUserLogin(request.params.mail)
+            .then(user => {
+
+                function replySuccess() {
+                    reply({
+                        message: 'New password generated and sent per mail.'
+                    });
+                }
+
+                this.generatePasswordToken(user)
+                    .then(this.updatePasswordToken)
+                    .then(this.sendMail)
+                    .then(replySuccess)
+                    .catch(function (err) {
+                        reply(err);
+                    });
+            });
+    };
+
+    generatePasswordToken(user) {
+        return new Promise((resolve, reject) => {
+            // generate reset password
+            var resetPassword = this.generatePassword(12, false); // -> 76PAGEaq6i5c
+
+            this.bcrypt.genSalt(10, (err, salt) => {
+                this.bcrypt.hash(resetPassword, salt, (err, hash) => {
+                    if (err) {
+                        return reject(err);
+                    }
+                    user.resetPasswordToken = hash;
+                    console.log(resetPassword);
+                    user.resetPassword = resetPassword;
+                    resolve(user)
+                })
+            })
+
+        });
+    }
+
+    sendMail = (user) => {
+        // send mail to user with new password token
+        this.mailer.sendPasswordForgottenMail(user);
+    };
+
+    updatePasswordToken = (user) => {
+        return new Promise((resolve, reject) => {
+            // set timestamp for password expires
+            user.resetPasswordExpires = Date.now();
+            // tmp remove of plain text variable
+            var resetPassword = user.resetPassword;
+            delete user.resetPassword;
+            // update user with new value
+            this.db.updateUser(user._id, user, (err, data) => {
+                if (err) {
+                    console.log('9');
+
+                    return reject(err);
+                }
+                // add plain text variable for email
+                user.resetPassword = resetPassword;
+                resolve(user);
+            });
+        });
+    };
+
 
     errorInit(error) {
         if (error) {

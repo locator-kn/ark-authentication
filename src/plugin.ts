@@ -275,17 +275,18 @@ class ArkAuth {
                     .then(setSessionData)
                     .then(replySuccess)
                     .catch(() => {
-                        return this.checkForResetPassword(user)
+
+                        this.checkForResetPassword(user)
+                            .then(()=> {
+                                return this.compareResetPassword(request.payload.password, user);
+                            })
+                            .then((user) => {
+                                return this.resetUserPassword(user);
+                            })
+                            .then(setSessionData)
+                            .then(replySuccess)
+                            .catch(replyUnauthorized);
                     })
-                    .then(()=> {
-                        return this.compareResetPassword(request.payload.password, user);
-                    })
-                    .then((user) => {
-                        return this.resetUserPassword(user);
-                    })
-                    .then(setSessionData)
-                    .then(replySuccess)
-                    .catch(replyUnauthorized);
 
 
             }).catch(replyUnauthorized);

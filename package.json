@@ -29,6 +29,7 @@
     "node-notifier": "^4.1.2"
   },
   "dependencies": {
+    "ark-mailer": "^1.0.2",
     "bcrypt": "^0.8.2",
     "bell": "^2.5.0",
     "boom": "^2.7.1",

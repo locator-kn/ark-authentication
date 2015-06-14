@@ -1,6 +1,6 @@
 {
   "name": "ark-authentication",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Authentication used in ark",
   "main": "index.js",
   "scripts": {
@@ -29,11 +29,13 @@
     "node-notifier": "^4.1.2"
   },
   "dependencies": {
+    "ark-mailer": "^1.0.2",
     "bcrypt": "^0.8.2",
     "bell": "^2.5.0",
     "boom": "^2.7.1",
     "hapi-auth-cookie": "^2.1.0",
     "joi": "^6.4.1",
+    "password-generator": "^1.0.0",
     "tsd": "^0.6.0",
     "typescript": "^1.5.0-alpha"
   }

@@ -379,7 +379,7 @@ class ArkAuth {
      * @param reply
      */
     passwordForgotten = (request, reply) => {
-        this.db.getUserLogin(request.params.mail)
+        this.db.getUserLogin(request.params.mail.toLowerCase())
             .then(user => {
 
                 function replySuccess() {

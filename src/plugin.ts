@@ -3,8 +3,7 @@ export interface IRegister {
     attributes?: any;
 }
 
-declare
-var Promise:any;
+declare var Promise:any;
 
 export default
 class ArkAuth {
@@ -141,7 +140,7 @@ class ArkAuth {
                     payload: {
                         mail: this.joi.string().email().min(3).max(30).required()
                             .description('Mail address'),
-                        password: this.joi.string().regex(/[a-zA-Z0-9@#$%_&!"ง\/\(\)=\?\^]{3,30}/).required()
+                        password: this.joi.string().regex(/[a-zA-Z0-9@#$%_&!"ยง\/\(\)=\?\^]{3,30}/).required()
                             .description('User set password')
                     }
                 }
@@ -205,25 +204,32 @@ class ArkAuth {
                     // TODO: set relative in production
                     return reply.redirect('http://localhost:8000/#/context');
                 } else {
-                    return reply(this.boom.wrap('email already in use', 409));
+                    return reply(this.boom.conflict('email already in use'));
                 }
             }).catch(reason => {
 
                 if (!reason) {
                     var newUser = {
-                        mail: profile.email,
+                        mail: profile.email.toLowerCase(),
                         name: profile.name.first,
                         surname: profile.name.last,
-                        picture: 'todo',
-                        type: 'user',
+                        picture: {
+                            picture: profile.raw.picture, // TODO: is raw defined?? google? facebook?
+                            thumbnail: profile.raw.picture
+                        },
                         strategy: strategy,
+                        type: 'user',
+                        birthdate: '',
+                        residence: '',
+                        description: '',
+                        verified: false, // TODO: or true? will he get a mail??
                         additionalInfo: request.auth.credentials
                     };
 
                     this.db.createUser(newUser, (err, data) => {
 
                         if (err) {
-                            return reply(this.boom.wrap(err, 400));
+                            return reply(this.boom.badRequest(err));
                         }
                         var userSessionData = {
                             mail: profile.email,
@@ -235,7 +241,7 @@ class ArkAuth {
                         return reply.redirect('http://localhost:8000/#/context');
                     });
                 } else {
-                    return reply(this.boom.wrap(reason, 400));
+                    return reply(this.boom.badRequest(reason));
                 }
 
             });
@@ -355,7 +361,7 @@ class ArkAuth {
         this.db.getUserByUUID(request.params.uuid, (err, data)=> {
 
             if (err) {
-                reply(this.boom.wrap('Error on confirmation of e-mail address ', 400));
+                reply(this.boom.badRequest('Error on confirmation of e-mail address '));
             }
 
             var user = data;
@@ -365,7 +371,7 @@ class ArkAuth {
                         reply(result);
                     })
                     .catch((error)=> {
-                        reply(this.boom.wrap(error, 400));
+                        reply(this.boom.badRequest(error));
                     });
             } else {
                 reply('Mail already verified!');

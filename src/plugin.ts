@@ -199,6 +199,7 @@ class ArkAuth {
                     var userSessionData = {
                         mail: profile.email,
                         _id: user.id,
+                        name: user.name,
                         strategy: strategy
                     };
                     request.auth.session.set(userSessionData);
@@ -235,6 +236,7 @@ class ArkAuth {
                         var userSessionData = {
                             mail: profile.email,
                             _id: data._id,
+                            name: data.name,
                             strategy: strategy
                         };
                         request.auth.session.set(userSessionData);
@@ -275,6 +277,7 @@ class ArkAuth {
                     request.auth.session.set({
                         _id: user._id,
                         mail: user.mail,
+                        name: user.name,
                         strategy: user.strategy
                     });
                 };
@@ -408,7 +411,6 @@ class ArkAuth {
                         return reject(err);
                     }
                     user.resetPasswordToken = hash;
-                    console.log(resetPassword);
                     user.resetPassword = resetPassword;
                     resolve(user)
                 })
@@ -432,8 +434,6 @@ class ArkAuth {
             // update user with new value
             this.db.updateUser(user._id, user, (err, data) => {
                 if (err) {
-                    console.log('9');
-
                     return reject(err);
                 }
                 // add plain text variable for email

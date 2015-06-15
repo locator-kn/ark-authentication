@@ -3,7 +3,8 @@ export interface IRegister {
     attributes?: any;
 }
 
-declare var Promise:any;
+declare
+var Promise:any;
 
 export default
 class ArkAuth {
@@ -205,25 +206,32 @@ class ArkAuth {
                     // TODO: set relative in production
                     return reply.redirect('http://localhost:8000/#/context');
                 } else {
-                    return reply(this.boom.wrap('email already in use', 409));
+                    return reply(this.boom.conflict('email already in use'));
                 }
             }).catch(reason => {
 
                 if (!reason) {
                     var newUser = {
-                        mail: profile.email,
+                        mail: profile.email.toLowerCase(),
                         name: profile.name.first,
                         surname: profile.name.last,
-                        picture: 'todo',
-                        type: 'user',
+                        picture: {
+                            picture: profile.raw.picture, // TODO: is raw defined?? google? facebook?
+                            thumbnail: profile.raw.picture
+                        },
                         strategy: strategy,
+                        type: 'user',
+                        birthdate: '',
+                        residence: '',
+                        description: '',
+                        verified: false, // TODO: or true? will he get a mail??
                         additionalInfo: request.auth.credentials
                     };
 
                     this.db.createUser(newUser, (err, data) => {
 
                         if (err) {
-                            return reply(this.boom.wrap(err, 400));
+                            return reply(this.boom.badRequest(err));
                         }
                         var userSessionData = {
                             mail: profile.email,
@@ -236,7 +244,7 @@ class ArkAuth {
                         return reply.redirect('http://localhost:8000/#/context');
                     });
                 } else {
-                    return reply(this.boom.wrap(reason, 400));
+                    return reply(this.boom.badRequest(reason));
                 }
 
             });

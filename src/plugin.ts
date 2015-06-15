@@ -3,7 +3,8 @@ export interface IRegister {
     attributes?: any;
 }
 
-declare var Promise:any;
+declare
+var Promise:any;
 
 export default
 class ArkAuth {
@@ -138,7 +139,7 @@ class ArkAuth {
                 tags: ['api', 'user', 'auth', 'authentication', 'cookies'],
                 validate: {
                     payload: {
-                        mail: this.joi.string().email().min(3).max(30).required()
+                        mail: this.joi.string().email().min(3).max(60).required()
                             .description('Mail address'),
                         password: this.joi.string().regex(/[a-zA-Z0-9@#$%_&!"§\/\(\)=\?\^]{3,30}/).required()
                             .description('User set password')
@@ -361,20 +362,14 @@ class ArkAuth {
         this.db.getUserByUUID(request.params.uuid, (err, data)=> {
 
             if (err) {
-                reply(this.boom.badRequest('Error on confirmation of e-mail address '));
+                return reply(this.boom.badRequest('Error on confirmation of e-mail address '));
             }
 
             var user = data;
             if (!user.verified) {
-                this.db.updateDocument(user._id, {verified: true})
-                    .then((result)=> {
-                        reply(result);
-                    })
-                    .catch((error)=> {
-                        reply(this.boom.badRequest(error));
-                    });
+                reply(this.db.updateDocument(user._id, {verified: true}));
             } else {
-                reply('Mail already verified!');
+                reply(this.boom.badRequest('Mail already verified!'));
             }
         })
     }
@@ -394,14 +389,12 @@ class ArkAuth {
                     });
                 }
 
-                this.generatePasswordToken(user)
+                return this.generatePasswordToken(user)
                     .then(this.updatePasswordToken)
                     .then(this.sendMail)
                     .then(replySuccess)
-                    .catch(function (err) {
-                        reply(err);
-                    });
-            });
+
+            }).catch(err => reply(this.boom.badRequest(err)));
     };
 
     generatePasswordToken(user) {

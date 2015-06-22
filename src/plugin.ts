@@ -190,6 +190,9 @@ class ArkAuth {
     }
 
     loginHandler(request, reply) {
+        if (!request.auth.isAuthenticated) {
+            return reply(this.boom.unauthorized('Authentication failed due to: ' + request.auth.error.message));
+        }
         var profile = request.auth.credentials.profile;
         var strategy = request.auth.strategy;
 

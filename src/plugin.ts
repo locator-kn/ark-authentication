@@ -53,7 +53,8 @@ class ArkAuth {
                     password: 'secrect',
                     clientId: this.env['GOOGLE_CLIENTID'],
                     clientSecret: this.env['GOOGLE_CLIENTSECRET'],
-                    isSecure: false     // Terrible idea but required if not using HTTPS
+                    isSecure: false,     // Terrible idea but required if not using HTTPS
+                    location: 'http://locator-app.com/api/v1/loginGoogle'
                 });
 
                 server.auth.strategy('facebook', 'bell', this.mode, {
@@ -61,7 +62,8 @@ class ArkAuth {
                     password: 'secrect2',
                     clientId: this.env['FACEBOOK_CLIENTID'],
                     clientSecret: this.env['FACEBOOK_CLIENTSECRET'],
-                    isSecure: false     // Terrible idea but required if not using HTTPS
+                    isSecure: false,     // Terrible idea but required if not using HTTPS
+                    location: 'http://locator-app.com/api/v1/loginFacebook'
                 });
 
                 server.auth.default({
@@ -211,7 +213,7 @@ class ArkAuth {
                 }
             }).catch(reason => {
 
-                if (!reason) {
+                if (reason === 'No user found') {
                     var newUser = {
                         mail: profile.email.toLowerCase(),
                         name: profile.name.first,

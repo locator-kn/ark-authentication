@@ -200,7 +200,8 @@ class ArkAuth {
                         mail: profile.email,
                         _id: user.id,
                         name: user.name,
-                        strategy: strategy
+                        strategy: strategy,
+                        isAdmin: user.isAdmin || false
                     };
                     request.auth.session.set(userSessionData);
                     // TODO: set relative in production

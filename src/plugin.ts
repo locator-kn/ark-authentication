@@ -54,7 +54,7 @@ class ArkAuth {
                     clientId: this.env['GOOGLE_CLIENTID'],
                     clientSecret: this.env['GOOGLE_CLIENTSECRET'],
                     isSecure: false,     // Terrible idea but required if not using HTTPS
-                    location: 'http://locator-app.com/api/v1/loginGoogle'
+                    location: 'http://locator-app.com'
                 });
 
                 server.auth.strategy('facebook', 'bell', this.mode, {
@@ -63,7 +63,7 @@ class ArkAuth {
                     clientId: this.env['FACEBOOK_CLIENTID'],
                     clientSecret: this.env['FACEBOOK_CLIENTSECRET'],
                     isSecure: false,     // Terrible idea but required if not using HTTPS
-                    location: 'http://locator-app.com/api/v1/loginFacebook'
+                    location: 'http://locator-app.com'
                 });
 
                 server.auth.default({

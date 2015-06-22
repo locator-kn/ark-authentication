@@ -206,8 +206,7 @@ class ArkAuth {
                         isAdmin: user.isAdmin || false
                     };
                     request.auth.session.set(userSessionData);
-                    // TODO: set relative in production
-                    return reply.redirect('http://localhost:8000/#/context');
+                    return reply.redirect('/#/context');
                 } else {
                     return reply(this.boom.conflict('email already in use'));
                 }
@@ -243,8 +242,7 @@ class ArkAuth {
                             strategy: strategy
                         };
                         request.auth.session.set(userSessionData);
-                        // TODO: set relative in production
-                        return reply.redirect('http://localhost:8000/#/context');
+                        return reply.redirect('/#/context');
                     });
                 } else {
                     return reply(this.boom.badRequest(reason));

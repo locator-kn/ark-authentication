@@ -279,7 +279,8 @@ class ArkAuth {
                         _id: user._id,
                         mail: user.mail,
                         name: user.name,
-                        strategy: user.strategy
+                        strategy: user.strategy,
+                        isAdmin: user.isAdmin || false
                     });
                 };
 

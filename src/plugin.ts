@@ -203,7 +203,7 @@ class ArkAuth {
                 if (user.strategy === strategy) {
                     var userSessionData = {
                         mail: profile.email,
-                        _id: user.id,
+                        _id: user.id || user._id,
                         name: user.name,
                         strategy: strategy,
                         isAdmin: user.isAdmin || false
@@ -240,7 +240,7 @@ class ArkAuth {
                         }
                         var userSessionData = {
                             mail: profile.email,
-                            _id: data._id,
+                            _id: data.id || data._id,
                             name: data.name,
                             strategy: strategy
                         };

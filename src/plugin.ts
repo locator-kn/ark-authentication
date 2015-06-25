@@ -215,7 +215,8 @@ class ArkAuth {
                     return reply(this.boom.conflict('email already in use'));
                 }
             }).catch(reason => {
-
+                // this is actually not an error.
+                // maybe we should add another db fn which gets resolved if no user is found
                 if (reason === 'No user found') {
                     var newUser = {
                         mail: profile.email.toLowerCase(),

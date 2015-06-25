@@ -211,6 +211,7 @@ class ArkAuth {
                     request.auth.session.set(userSessionData);
                     return reply.redirect('/#/context');
                 } else {
+                    // TODO: discuss whether we want to allow multiple registrations
                     return reply(this.boom.conflict('email already in use'));
                 }
             }).catch(reason => {

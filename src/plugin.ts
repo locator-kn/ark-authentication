@@ -257,6 +257,7 @@ class ArkAuth {
                         };
                         request.auth.session.set(userSessionData);
                         // redirect to context, this route takes the user back to where he was
+                        // TODO: what if we are on mobile?
                         return reply.redirect('/#/context');
                     });
                 } else {

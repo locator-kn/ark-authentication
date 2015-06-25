@@ -189,6 +189,15 @@ class ArkAuth {
         });
     }
 
+    /**
+     *
+     * Handler for authentication via facebook or google.
+     * This gets also called if the user is already authenticated and just logs in again.
+     *
+     * @param request
+     * @param reply
+     * @returns {any}
+     */
     loginHandler(request, reply) {
         if (!request.auth.isAuthenticated) {
             return reply(this.boom.unauthorized('Authentication failed due to: ' + request.auth.error.message));

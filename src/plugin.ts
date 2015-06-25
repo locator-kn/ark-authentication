@@ -256,6 +256,7 @@ class ArkAuth {
                             strategy: strategy
                         };
                         request.auth.session.set(userSessionData);
+                        // redirect to context, this route takes the user back to where he was
                         return reply.redirect('/#/context');
                     });
                 } else {

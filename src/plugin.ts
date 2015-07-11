@@ -231,7 +231,7 @@ class ArkAuth {
                         mail: profile.email.toLowerCase(),
                         name: profile.name.first,
                         surname: profile.name.last,
-                        picture: profile.raw.picture || '', // TODO: is raw defined?? google? facebook?
+                        picture: profile.raw.picture || '',
                         strategy: strategy,
                         type: 'user',
                         birthdate: '',
@@ -244,7 +244,7 @@ class ArkAuth {
                     this.db.createUser(newUser, (err, data) => {
 
                         if (err) {
-                            return reply(this.boom.badRequest(err));
+                            return reply.redirect('/develop/#/error?r=emailTaken');
                         }
                         var userSessionData = {
                             mail: profile.email,
@@ -254,7 +254,6 @@ class ArkAuth {
                         };
                         request.auth.session.set(userSessionData);
                         // redirect to context, this route takes the user back to where he was
-                        // TODO: what if we are on mobile?
                         reply.redirect('/develop/#/context');
 
                         // Send a mail to user, which register via facebook or google in v2

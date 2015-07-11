@@ -231,10 +231,7 @@ class ArkAuth {
                         mail: profile.email.toLowerCase(),
                         name: profile.name.first,
                         surname: profile.name.last,
-                        picture: {
-                            picture: profile.raw.picture, // TODO: is raw defined?? google? facebook?
-                            thumbnail: profile.raw.picture
-                        },
+                        picture: profile.raw.picture || '', // TODO: is raw defined?? google? facebook?
                         strategy: strategy,
                         type: 'user',
                         birthdate: '',

@@ -255,7 +255,19 @@ class ArkAuth {
                         request.auth.session.set(userSessionData);
                         // redirect to context, this route takes the user back to where he was
                         // TODO: what if we are on mobile?
-                        return reply.redirect('/#/context');
+                        reply.redirect('/#/context');
+
+                        // Send a mail to user, which register via facebook or google in v2
+                      /*  this.mailer.sendRegistrationMail({
+                            name: newUser.name,
+                            mail: newUser.mail,
+                            uuid: newUser.uuid
+                        });*/
+
+                        // add the default location
+                        this.db.addDefaultLocationToUser(data.id)
+                            .then(value => console.log('default location added', value))
+                            .catch(err => console.log('error adding default location', err));
                     });
                 } else {
                     return reply(this.boom.badRequest(reason));

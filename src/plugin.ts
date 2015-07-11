@@ -218,7 +218,7 @@ class ArkAuth {
                         isAdmin: user.isAdmin || false
                     };
                     request.auth.session.set(userSessionData);
-                    return reply.redirect('/#/context');
+                    return reply.redirect('/develop/#/context');
                 } else {
                     // TODO: discuss whether we want to allow multiple registrations
                     return reply(this.boom.conflict('email already in use'));
@@ -255,7 +255,7 @@ class ArkAuth {
                         request.auth.session.set(userSessionData);
                         // redirect to context, this route takes the user back to where he was
                         // TODO: what if we are on mobile?
-                        reply.redirect('/#/context');
+                        reply.redirect('/develop/#/context');
 
                         // Send a mail to user, which register via facebook or google in v2
                       /*  this.mailer.sendRegistrationMail({

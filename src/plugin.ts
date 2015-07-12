@@ -3,8 +3,10 @@ export interface IRegister {
     attributes?: any;
 }
 
-declare
-var Promise:any;
+declare var Promise:any;
+
+
+import {initLogging, log, logError} from './logging/logging'
 
 export default
 class ArkAuth {
@@ -237,7 +239,7 @@ class ArkAuth {
                         birthdate: '',
                         residence: '',
                         description: '',
-                        verified: false, // TODO: or true? will he get a mail??
+                        verified: true,
                         additionalInfo: request.auth.credentials
                     };
 
@@ -249,24 +251,22 @@ class ArkAuth {
                         var userSessionData = {
                             mail: profile.email,
                             _id: data.id || data._id,
-                            name: data.name,
                             strategy: strategy
                         };
                         request.auth.session.set(userSessionData);
                         // redirect to context, this route takes the user back to where he was
                         reply.redirect('/develop/#/context');
 
-                        // Send a mail to user, which register via facebook or google in v2
-                      /*  this.mailer.sendRegistrationMail({
+                        // Send a mail to user, which register via facebook or google
+                        this.mailer.sendRegistrationMailWithoutUuid({
                             name: newUser.name,
                             mail: newUser.mail,
-                            uuid: newUser.uuid
-                        });*/
+                        });
 
                         // add the default location
                         this.db.addDefaultLocationToUser(data.id)
-                            .then(value => console.log('default location added', value))
-                            .catch(err => console.log('error adding default location', err));
+                            .then(value => log('default location added', value))
+                            .catch(err => logError('error adding default location', err));
                     });
                 } else {
                     return reply(this.boom.badRequest(reason));
@@ -472,7 +472,7 @@ class ArkAuth {
 
     errorInit(error) {
         if (error) {
-            console.log('Error: Failed to load plugin (ArkAuth):', error);
+            logError('Error: Failed to load plugin (ArkAuth):', error);
         }
     }
 }

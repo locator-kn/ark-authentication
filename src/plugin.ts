@@ -6,7 +6,7 @@ export interface IRegister {
 declare var Promise:any;
 
 
-import {initLogging, log, logError} from './logging/logging'
+import {initLogging, log, logError} from './util/logging'
 
 export default
 class ArkAuth {
@@ -265,8 +265,8 @@ class ArkAuth {
 
                         // add the default location
                         this.db.addDefaultLocationToUser(data.id)
-                            .then(value => log('default location added', value))
-                            .catch(err => logError('error adding default location', err));
+                            .then(value => log('default location added' + value))
+                            .catch(err => logError('error adding default location' + err));
                     });
                 } else {
                     return reply(this.boom.badRequest(reason));
@@ -472,7 +472,7 @@ class ArkAuth {
 
     errorInit(error) {
         if (error) {
-            logError('Error: Failed to load plugin (ArkAuth):', error);
+            logError('Error: Failed to load plugin (ArkAuth):' + error);
         }
     }
 }

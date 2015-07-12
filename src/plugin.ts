@@ -39,7 +39,8 @@ class ArkAuth {
                 ttl: this.ttl || 600000,
                 keepAlive: true,
                 cookie: 'ark_session',
-                isSecure: false
+                isSecure: false,
+                clearInvalid: true
             });
 
             server.register(require('bell'), err => {

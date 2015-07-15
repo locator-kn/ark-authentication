@@ -320,9 +320,9 @@ class ArkAuth {
                         isAdmin: user.isAdmin || false
                     };
                     request.auth.session.set(userSessionData);
-                    return reply.redirect('/develop/#/context');
+                    return reply.redirect('/#/context');
                 } else {
-                    return reply.redirect('/develop/#/error?r=emailTaken');
+                    return reply.redirect('/#/error?r=emailTaken');
                 }
             }).catch(reason => {
                 // this is actually not an error.
@@ -345,7 +345,7 @@ class ArkAuth {
                     this.db.createUser(newUser, (err, data) => {
 
                         if (err) {
-                            return reply.redirect('/develop/#/error?r=emailTaken');
+                            return reply.redirect('/#/error?r=emailTaken');
                         }
                         var userSessionData = {
                             mail: profile.email,
@@ -354,7 +354,7 @@ class ArkAuth {
                         };
                         request.auth.session.set(userSessionData);
                         // redirect to context, this route takes the user back to where he was
-                        reply.redirect('/develop/#/context');
+                        reply.redirect('/#/context');
 
                         // Send a mail to user, which register via facebook or google
                         this.mailer.sendRegistrationMailWithoutUuid({

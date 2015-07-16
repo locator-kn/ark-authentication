@@ -143,23 +143,6 @@ class ArkAuth {
 
         server.route({
             method: ['POST'], // Must handle both GET and POST
-            path: '/mobile/loginFacebook',          // The callback endpoint registered with the provider
-            config: {
-                handler: this.mobileLoginHandler,
-                auth: false,
-                description: 'Login with Facebook.',
-                tags: ['api', 'user', 'mobile', 'auth', 'authentication', 'cookies', 'oauth'],
-                validate: {
-                    payload: {
-                        accessToken: this.joi.string().required()
-                            .description('Access token from facebook')
-                    }
-                }
-            }
-        });
-
-        server.route({
-            method: ['POST'], // Must handle both GET and POST
             path: '/mobile/loginOAuth',          // The callback endpoint registered with the provider
             config: {
                 handler: this.mobileLoginHandler,

@@ -18,6 +18,10 @@ class ArkAuth {
     mailer:any;
     fbgraph:any;
 
+    google:any;
+    plus:any;
+    oauth2Client:any;
+
     constructor(private mode, private ttl, private env) {
         this.register.attributes = {
             pkg: require('./../../package.json')
@@ -27,6 +31,11 @@ class ArkAuth {
         this.bcrypt = require('bcrypt');
         this.generatePassword = require('password-generator');
         this.fbgraph = require('fbgraph');
+        this.google = require('googleapis');
+
+        this.plus = this.google.plus('v1');
+        var OAuth2 = this.google.auth.OAuth2;
+        this.oauth2Client = new OAuth2(this.env['GOOGLE_CLIENTID'], this.env['GOOGLE_CLIENTSECRET'], 'http://locator-app.com');
     }
 
     register:IRegister = (server, options, next) => {
@@ -150,6 +159,24 @@ class ArkAuth {
         });
 
         server.route({
+            method: ['POST'], // Must handle both GET and POST
+            path: '/mobile/loginOAuth',          // The callback endpoint registered with the provider
+            config: {
+                handler: this.mobileLoginHandler,
+                auth: false,
+                description: 'Login with Facebook.',
+                tags: ['api', 'user', 'mobile', 'auth', 'authentication', 'cookies', 'oauth'],
+                validate: {
+                    payload: {
+                        accessToken: this.joi.string().required()
+                            .description('Access token from facebook'),
+                        strategy: this.joi.string().required().description('facebook, google')
+                    }
+                }
+            }
+        });
+
+        server.route({
             method: ['POST'],
             path: '/login',          // The callback endpoint registered with the provider
             config: {
@@ -210,84 +237,112 @@ class ArkAuth {
             }
         });
     }
+    _createOrLoginUser(_user:any, strategy, request, reply) {
+        this.db.getUserLogin(_user.email)
+            .then((user:any) => {
+                // there is already a user with this email registered
+                if (user.strategy === strategy) {
+                    var userSessionData = {
+                        mail: user.email,
+                        _id: user.id || user._id,
+                        name: user.name,
+                        strategy: strategy,
+                        isAdmin: user.isAdmin || false
+                    };
+                    request.auth.session.set(userSessionData);
+                    return reply(userSessionData);
+                } else {
+                    return reply(this.boom.conflict('email already taken'));
+                }
+            }).catch(reason => {
+                // this is actually not an error.
+                // maybe we should add another db fn which gets resolved if no user is found
+                if (reason === 'No user found') {
+                    var newUser = {
+                        mail: _user.email.toLowerCase(),
+                        name: _user.first_name,
+                        surname: _user.last_name,
+                        picture: '',
+                        strategy: strategy,
+                        type: 'user',
+                        birthdate: '',
+                        residence: '',
+                        description: '',
+                        verified: true,
+                        additionalInfo: _user
+                    };
 
-    mobileLoginHandler(request, reply) {
+                    this.db.createUser(newUser, (err, data) => {
+
+                        if (err) {
+                            return reply(newUser);
+                        }
+                        var userSessionData = {
+                            mail: _user.email,
+                            _id: data.id || data._id,
+                            name: data.name,
+                            strategy: strategy
+                        };
+                        request.auth.session.set(userSessionData);
+                        // redirect to context, this route takes the user back to where he was
+                        reply(userSessionData);
+
+                        // Send a mail to user, which register via facebook or google in v2
+                        /*  this.mailer.sendRegistrationMail({
+                         name: newUser.name,
+                         mail: newUser.mail,
+                         uuid: newUser.uuid
+                         });*/
+
+                        // add the default location
+                        this.db.addDefaultLocationToUser(data.id)
+                            .then(value => console.log('default location added', value))
+                            .catch(err => console.log('error adding default location', err));
+                    });
+                } else {
+                    return reply(this.boom.badRequest(reason));
+                }
+
+            });
+    }
+
+    mobileLoginGoogle(request, reply) {
+        var strategy = 'google';
+        // Retrieve tokens via token exchange explained above or set them:
+        this.oauth2Client.setCredentials({
+            access_token: request.payload.accessToken
+        });
+
+        this.plus.people.get({ userId: 'me', auth: this.oauth2Client }, (err, response) => {
+
+            if(err) {
+                return reply(err);
+            }
+
+            this._createOrLoginUser(response, strategy, request, reply);
+        });
+
+
+    }
+
+    mobileLoginFacebook(request, reply) {
         var access_token = request.payload.accessToken;
         var strategy = 'facebook';
 
         this.fbgraph.setAccessToken(access_token);
 
         this.fbgraph.get("/me", (err, fb_user) => {
-            if(err) {
-                reply(err);
-            }
-            this.db.getUserLogin(fb_user.email)
-                .then(user => {
-                    // there is already a user with this email registered
-                    if (user.strategy === strategy) {
-                        var userSessionData = {
-                            mail: fb_user.email,
-                            _id: user.id || user._id,
-                            name: user.name,
-                            strategy: strategy,
-                            isAdmin: user.isAdmin || false
-                        };
-                        request.auth.session.set(userSessionData);
-                        return reply(userSessionData);
-                    } else {
-                        return reply(this.boom.conflict('email already taken'));
-                    }
-                }).catch(reason => {
-                    // this is actually not an error.
-                    // maybe we should add another db fn which gets resolved if no user is found
-                    if (reason === 'No user found') {
-                        var newUser = {
-                            mail: fb_user.email.toLowerCase(),
-                            name: fb_user.first_name,
-                            surname: fb_user.last_name,
-                            picture: '',
-                            strategy: strategy,
-                            type: 'user',
-                            birthdate: '',
-                            residence: '',
-                            description: '',
-                            verified: true,
-                            additionalInfo: fb_user
-                        };
+            this._createOrLoginUser(fb_user, strategy, request, reply);
 
-                        this.db.createUser(newUser, (err, data) => {
-
-                            if (err) {
-                                return reply(newUser);
-                            }
-                            var userSessionData = {
-                                mail: fb_user.email,
-                                _id: data.id || data._id,
-                                name: data.name,
-                                strategy: strategy
-                            };
-                            request.auth.session.set(userSessionData);
-                            // redirect to context, this route takes the user back to where he was
-                            reply(userSessionData);
-
-                            // Send a mail to user, which register via facebook or google in v2
-                            /*  this.mailer.sendRegistrationMail({
-                             name: newUser.name,
-                             mail: newUser.mail,
-                             uuid: newUser.uuid
-                             });*/
-
-                            // add the default location
-                            this.db.addDefaultLocationToUser(data.id)
-                                .then(value => console.log('default location added', value))
-                                .catch(err => console.log('error adding default location', err));
-                        });
-                    } else {
-                        return reply(this.boom.badRequest(reason));
-                    }
-
-                });
         });
+    }
+
+    mobileLoginHandler(request, reply) {
+        if(request.payload.strategy === 'facebook') {
+            return this.mobileLoginFacebook(request, reply);
+        } else {
+            return this.mobileLoginGoogle(request, reply);
+        }
 
     }
 

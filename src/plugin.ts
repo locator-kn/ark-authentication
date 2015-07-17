@@ -221,6 +221,7 @@ class ArkAuth {
         });
     }
     _createOrLoginUser(_user:any, strategy, request, reply) {
+        console.log(_user);
         this.db.getUserLogin(_user.email)
             .then((user:any) => {
                 // there is already a user with this email registered

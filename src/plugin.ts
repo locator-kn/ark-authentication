@@ -305,7 +305,7 @@ class ArkAuth {
             // this is needed because google returns loads of data with a diff structure
             var googleUser = {
                 strategy: strategy,
-                mail: response.emails[0].value,
+                email: response.emails[0].value,
                 picture: response.image.url || '',
                 name: response.name.givenName || '',
                 surname: response.name.familyName || '',

@@ -326,7 +326,7 @@ class ArkAuth {
              additionalInfo: request.auth.credentials
              */
 
-            this._createOrLoginUser(response, googleUser, request, reply);
+            this._createOrLoginUser(googleUser, strategy, request, reply);
         });
 
 

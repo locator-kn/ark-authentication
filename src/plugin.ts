@@ -410,7 +410,7 @@ class ArkAuth {
                         newUser = profile;
                     }
 
-                    this.db.createUser(newUser, (err, data) => {
+                    this.db.createUser((newUser:any), (err, data) => {
 
                         if (err) {
                             return reply.redirect('/#/error?r=emailTaken');
@@ -427,7 +427,7 @@ class ArkAuth {
                         // Send a mail to user, which register via facebook or google
                         this.mailer.sendRegistrationMailWithoutUuid({
                             name: newUser.name,
-                            mail: newUser.mail,
+                            mail: newUser.mail
                         });
 
                         // add the default location

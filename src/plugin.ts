@@ -299,11 +299,34 @@ class ArkAuth {
 
         this.plus.people.get({ userId: 'me', auth: this.oauth2Client }, (err, response) => {
 
-            if(err) {
-                return reply(err);
+            if(err || !response.emails || !response.emails.length || !response.emails[0].value) {
+                return reply(err || {message: 'missing mail in google oauth'});
             }
+            // this is needed because google returns loads of data with a diff structure
+            var googleUser = {
+                strategy: strategy,
+                mail: response.emails[0].value,
+                picture: response.image.url || '',
+                name: response.name.givenName || '',
+                surname: response.name.familyName || '',
+                raw: response
+            };
 
-            this._createOrLoginUser(response, strategy, request, reply);
+            /*
+             mail: profile.email.toLowerCase(),
+             name: profile.name.first,
+             surname: profile.name.last,
+             picture: profile.raw.picture || '',
+             strategy: strategy,
+             type: 'user',
+             birthdate: '',
+             residence: '',
+             description: '',
+             verified: true,
+             additionalInfo: request.auth.credentials
+             */
+
+            this._createOrLoginUser(response, googleUser, request, reply);
         });
 
 
@@ -367,19 +390,25 @@ class ArkAuth {
                 // this is actually not an error.
                 // maybe we should add another db fn which gets resolved if no user is found
                 if (reason === 'No user found') {
-                    var newUser = {
-                        mail: profile.email.toLowerCase(),
-                        name: profile.name.first,
-                        surname: profile.name.last,
-                        picture: profile.raw.picture || '',
-                        strategy: strategy,
-                        type: 'user',
-                        birthdate: '',
-                        residence: '',
-                        description: '',
-                        verified: true,
-                        additionalInfo: request.auth.credentials
-                    };
+                    var newUser = {};
+                    // Sorry for that, i gonna refactor all the things after launch, maybe
+                    if (profile.strategy !== 'facebook') {
+                        newUser = {
+                            mail: profile.email.toLowerCase(),
+                            name: profile.name.first,
+                            surname: profile.name.last,
+                            picture: profile.raw.picture || '',
+                            strategy: strategy,
+                            type: 'user',
+                            birthdate: '',
+                            residence: '',
+                            description: '',
+                            verified: true,
+                            additionalInfo: request.auth.credentials
+                        };
+                    } else {
+                        newUser = profile;
+                    }
 
                     this.db.createUser(newUser, (err, data) => {
 

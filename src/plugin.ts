@@ -390,7 +390,7 @@ class ArkAuth {
                 // this is actually not an error.
                 // maybe we should add another db fn which gets resolved if no user is found
                 if (reason === 'No user found') {
-                    var newUser = {};
+                    var newUser:any = {};
                     // Sorry for that, i gonna refactor all the things after launch, maybe
                     if (profile.strategy !== 'facebook') {
                         newUser = {
@@ -410,7 +410,7 @@ class ArkAuth {
                         newUser = profile;
                     }
 
-                    this.db.createUser((newUser:any), (err, data) => {
+                    this.db.createUser(newUser, (err, data) => {
 
                         if (err) {
                             return reply.redirect('/#/error?r=emailTaken');

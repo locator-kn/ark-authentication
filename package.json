@@ -1,6 +1,6 @@
 {
   "name": "ark-authentication",
-  "version": "2.10.1-pre",
+  "version": "2.10.1-prepre",
   "description": "Authentication used in ark",
   "main": "index.js",
   "scripts": {

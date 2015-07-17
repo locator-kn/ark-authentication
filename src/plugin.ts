@@ -307,8 +307,8 @@ class ArkAuth {
                 strategy: strategy,
                 email: response.emails[0].value,
                 picture: response.image.url || '',
-                name: response.name.givenName || '',
-                surname: response.name.familyName || '',
+                first_name: response.name.givenName || '',
+                last_name: response.name.familyName || '',
                 raw: response
             };
 

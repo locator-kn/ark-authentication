@@ -220,6 +220,7 @@ class ArkAuth {
             }
         });
     }
+
     _createOrLoginUser(_user:any, strategy, request, reply) {
         console.log(_user);
         this.db.getUserLogin(_user.email)
@@ -297,9 +298,9 @@ class ArkAuth {
             access_token: request.payload.accessToken
         });
 
-        this.plus.people.get({ userId: 'me', auth: this.oauth2Client }, (err, response) => {
+        this.plus.people.get({userId: 'me', auth: this.oauth2Client}, (err, response) => {
 
-            if(err || !response.emails || !response.emails.length || !response.emails[0].value) {
+            if (err || !response.emails || !response.emails.length || !response.emails[0].value) {
                 return reply(err || {message: 'missing mail in google oauth'});
             }
             // this is needed because google returns loads of data with a diff structure
@@ -345,7 +346,7 @@ class ArkAuth {
     }
 
     mobileLoginHandler(request, reply) {
-        if(request.payload.strategy === 'facebook') {
+        if (request.payload.strategy === 'facebook') {
             return this.mobileLoginFacebook(request, reply);
         } else {
             return this.mobileLoginGoogle(request, reply);
@@ -554,21 +555,18 @@ class ArkAuth {
         });
     }
 
-    confirm(request, reply) {
-        this.db.getUserByUUID(request.params.uuid, (err, data)=> {
+    confirm = (request, reply)=> {
+        this.db.getUserByUUID(request.params.uuid)
+            .then(user => {
+                if (!user.verified) {
+                    reply(this.db.updateDocument(user._id, {verified: true}));
+                    // TODO: redirect user to landing page
+                } else {
+                    reply(this.boom.badRequest('Mail already verified!'));
+                }
+            }).catch(reply)
+    };
 
-            if (err) {
-                return reply(this.boom.badRequest('Error on confirmation of e-mail address '));
-            }
-
-            var user = data;
-            if (!user.verified) {
-                reply(this.db.updateDocument(user._id, {verified: true}));
-            } else {
-                reply(this.boom.badRequest('Mail already verified!'));
-            }
-        })
-    }
 
     /**
      * Function to call if user forget his password.

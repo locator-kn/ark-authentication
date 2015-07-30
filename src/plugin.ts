@@ -616,22 +616,20 @@ class ArkAuth {
     };
 
     updatePasswordToken = (user) => {
-        return new Promise((resolve, reject) => {
-            // set timestamp for password expires
-            user.resetPasswordExpires = Date.now();
-            // tmp remove of plain text variable
-            var resetPassword = user.resetPassword;
-            delete user.resetPassword;
-            // update user with new value
-            this.db.updateUser(user._id, user, (err, data) => {
-                if (err) {
-                    return reject(err);
-                }
+        // set timestamp for password expires
+        user.resetPasswordExpires = Date.now();
+        // tmp remove of plain text variable
+        var resetPassword = user.resetPassword;
+        delete user.resetPassword;
+
+        // update user with new value
+        return this.db.updateUser(user._id, user)
+            .then((user:any) => {
                 // add plain text variable for email
                 user.resetPassword = resetPassword;
-                resolve(user);
-            });
-        });
+                return Promise.resolve(user)
+            })
+
     };
 
 

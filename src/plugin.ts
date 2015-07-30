@@ -369,6 +369,7 @@ class ArkAuth {
         }
         var profile = request.auth.credentials.profile;
         var strategy = request.auth.strategy;
+        var newUser:any = {};
 
         this.db.getUserLogin(profile.email)
             .then(user => {
@@ -391,7 +392,6 @@ class ArkAuth {
                 // this is actually not an error.
                 // maybe we should add another db fn which gets resolved if no user is found
                 if (reason === 'No user found') {
-                    var newUser:any = {};
                     // Sorry for that, i gonna refactor all the things after launch, maybe
                     if (profile.strategy !== 'facebook') {
                         newUser = {
@@ -410,37 +410,36 @@ class ArkAuth {
                     } else {
                         newUser = profile;
                     }
-
-                    this.db.createUser(newUser, (err, data) => {
-
-                        if (err) {
-                            return reply.redirect('/#/error?r=emailTaken');
-                        }
-                        var userSessionData = {
-                            mail: profile.email,
-                            _id: data.id || data._id,
-                            strategy: strategy
-                        };
-                        request.auth.session.set(userSessionData);
-                        // redirect to context, this route takes the user back to where he was
-                        reply.redirect('/#/context');
-
-                        // Send a mail to user, which register via facebook or google
-                        this.mailer.sendRegistrationMailWithoutUuid({
-                            name: newUser.name,
-                            mail: newUser.mail
-                        });
-
-                        // add the default location
-                        this.db.addDefaultLocationToUser(data.id)
-                            .then(value => log('default location added' + value))
-                            .catch(err => logError('error adding default location' + err));
-                    });
                 } else {
-                    return reply(this.boom.badRequest(reason));
+                    return Promise.reject(this.boom.badRequest(reason));
                 }
 
-            });
+                // create the actual user
+                return this.db.createUser(newUser)
+            }).then(data => {
+
+                var userSessionData = {
+                    mail: profile.email,
+                    _id: data.id || data._id,
+                    strategy: strategy
+                };
+                request.auth.session.set(userSessionData);
+                // redirect to context, this route takes the user back to where he was
+                reply.redirect('/#/context');
+
+                // Send a mail to user, which register via facebook or google
+                this.mailer.sendRegistrationMailWithoutUuid({
+                    name: newUser.name,
+                    mail: newUser.mail
+                });
+
+                // add the default location
+                this.db.addDefaultLocationToUser(data.id)
+                    .then(value => log('default location added' + value))
+                    .catch(err => logError('error adding default location' + err));
+            }).catch(err => reply(err).redirect('/#/error?r=emailTaken'))
+
+
     }
 
     login(request, reply) {

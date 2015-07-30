@@ -533,19 +533,13 @@ class ArkAuth {
     }
 
     resetUserPassword(user) {
-        return new Promise((resolve, reject) => {
-            // set temporary password to new password
-            user.password = user.resetPasswordToken;
-            // 'disable' reset password tokens
-            user.resetPasswordToken = null;
-            user.resetPasswordExpires = null;
-            this.db.updateUser(user._id, user, (err, data) => {
-                if (err) {
-                    return reject(err);
-                }
-            });
-            resolve();
-        });
+        // set temporary password to new password
+        user.password = user.resetPasswordToken;
+        // 'disable' reset password tokens
+        user.resetPasswordToken = null;
+        user.resetPasswordExpires = null;
+
+        return this.db.updateUser(user._id, user);
     }
 
     logout(request, reply) {

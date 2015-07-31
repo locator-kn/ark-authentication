@@ -551,7 +551,7 @@ class ArkAuth {
         this.db.getUserByUUID(request.params.uuid)
             .then(user => {
                 if (!user.verified) {
-                    reply(this.db.updateDocument(user._id, {verified: true}));
+                    reply(this.db.updateUser(user._id, {verified: true}));
                     // TODO: redirect user to landing page
                 } else {
                     reply(this.boom.badRequest('Mail already verified!'));

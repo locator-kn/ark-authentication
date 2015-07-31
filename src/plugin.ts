@@ -199,7 +199,12 @@ class ArkAuth {
                 auth: false,
                 handler: this.confirm,
                 description: 'confirm registration of user by uuid',
-                tags: ['api', 'user', 'auth']
+                tags: ['api', 'user', 'auth'],
+                validate: {
+                    params: {
+                        uuid: this.joi.string().required()
+                    }
+                }
             }
         });
 
@@ -213,8 +218,7 @@ class ArkAuth {
                 tags: ['api', 'user', 'auth'],
                 validate: {
                     params: {
-                        mail: this.joi.string()
-                            .required()
+                        mail: this.joi.string().required()
                     }
                 }
             }

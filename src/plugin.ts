@@ -218,7 +218,7 @@ class ArkAuth {
                 tags: ['api', 'user', 'auth'],
                 validate: {
                     params: {
-                        mail: this.joi.string().required()
+                        mail: this.joi.string().email().required()
                     }
                 }
             }

@@ -274,17 +274,18 @@ class ArkAuth {
                             // redirect to context, this route takes the user back to where he was
                             reply(userSessionData);
 
-                            // Send a mail to user, which register via facebook or google in v2
-                            /*  this.mailer.sendRegistrationMail({
-                             name: newUser.name,
-                             mail: newUser.mail,
-                             uuid: newUser.uuid
-                             });*/
+                            // Send a mail to user, which register via facebook or google
+                            this.mailer.sendRegistrationMailWithoutUuid({
+                                name: newUser.name,
+                                mail: newUser.mail
+                            });
 
                             // add the default location
                             this.db.addDefaultLocationToUser(data.id)
                                 .then(value => console.log('default location added', value))
                                 .catch(err => console.log('error adding default location', err));
+
+
                         }).catch(reply)
 
                 } else {

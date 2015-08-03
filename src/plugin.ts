@@ -261,7 +261,7 @@ class ArkAuth {
                         verified: true,
                         additionalInfo: _user
                     };
-                    
+
                     this.db.createUser(newUser)
                         .then(data => {
                             var userSessionData = {
@@ -285,7 +285,8 @@ class ArkAuth {
                             this.db.addDefaultLocationToUser(data.id)
                                 .then(value => console.log('default location added', value))
                                 .catch(err => console.log('error adding default location', err));
-                        })
+                        }).catch(reply)
+                    
                 } else {
                     return reply(this.boom.badRequest(reason));
                 }

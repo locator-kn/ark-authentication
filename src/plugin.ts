@@ -582,7 +582,7 @@ class ArkAuth {
                 this.sendMail({
                     mail: _user.mail,
                     name: _user.name,
-                    password: resetPassword
+                    resetPassword: resetPassword
                 });
 
                 reply({

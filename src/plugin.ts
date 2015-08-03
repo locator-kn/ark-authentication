@@ -199,7 +199,12 @@ class ArkAuth {
                 auth: false,
                 handler: this.confirm,
                 description: 'confirm registration of user by uuid',
-                tags: ['api', 'user', 'auth']
+                tags: ['api', 'user', 'auth'],
+                validate: {
+                    params: {
+                        uuid: this.joi.string().required()
+                    }
+                }
             }
         });
 
@@ -213,15 +218,15 @@ class ArkAuth {
                 tags: ['api', 'user', 'auth'],
                 validate: {
                     params: {
-                        mail: this.joi.string()
-                            .required()
+                        mail: this.joi.string().email().required()
                     }
                 }
             }
         });
     }
+
     _createOrLoginUser(_user:any, strategy, request, reply) {
-        console.log(_user);
+
         this.db.getUserLogin(_user.email)
             .then((user:any) => {
                 // there is already a user with this email registered
@@ -238,15 +243,16 @@ class ArkAuth {
                 } else {
                     return reply(this.boom.conflict('email already taken'));
                 }
+
             }).catch(reason => {
                 // this is actually not an error.
                 // maybe we should add another db fn which gets resolved if no user is found
                 if (reason === 'No user found') {
+
                     var newUser = {
                         mail: _user.email.toLowerCase(),
                         name: _user.first_name,
                         surname: _user.last_name,
-                        picture: '',
                         strategy: strategy,
                         type: 'user',
                         birthdate: '',
@@ -256,37 +262,35 @@ class ArkAuth {
                         additionalInfo: _user
                     };
 
-                    this.db.createUser(newUser, (err, data) => {
+                    this.db.createUser(newUser)
+                        .then(data => {
+                            var userSessionData = {
+                                mail: _user.email,
+                                _id: data.id || data._id,
+                                name: data.name, // < -- not working
+                                strategy: strategy
+                            };
+                            request.auth.session.set(userSessionData);
+                            // redirect to context, this route takes the user back to where he was
+                            reply(userSessionData);
 
-                        if (err) {
-                            return reply(newUser);
-                        }
-                        var userSessionData = {
-                            mail: _user.email,
-                            _id: data.id || data._id,
-                            name: data.name,
-                            strategy: strategy
-                        };
-                        request.auth.session.set(userSessionData);
-                        // redirect to context, this route takes the user back to where he was
-                        reply(userSessionData);
+                            // Send a mail to user, which register via facebook or google
+                            this.mailer.sendRegistrationMailWithoutUuid({
+                                name: newUser.name,
+                                mail: newUser.mail
+                            });
 
-                        // Send a mail to user, which register via facebook or google in v2
-                        /*  this.mailer.sendRegistrationMail({
-                         name: newUser.name,
-                         mail: newUser.mail,
-                         uuid: newUser.uuid
-                         });*/
+                            // add the default location
+                            this.db.addDefaultLocationToUser(data.id)
+                                .then(value => console.log('default location added', value))
+                                .catch(err => console.log('error adding default location', err));
 
-                        // add the default location
-                        this.db.addDefaultLocationToUser(data.id)
-                            .then(value => console.log('default location added', value))
-                            .catch(err => console.log('error adding default location', err));
-                    });
+
+                        }).catch(reply)
+
                 } else {
                     return reply(this.boom.badRequest(reason));
                 }
-
             });
     }
 
@@ -297,9 +301,9 @@ class ArkAuth {
             access_token: request.payload.accessToken
         });
 
-        this.plus.people.get({ userId: 'me', auth: this.oauth2Client }, (err, response) => {
+        this.plus.people.get({userId: 'me', auth: this.oauth2Client}, (err, response) => {
 
-            if(err || !response.emails || !response.emails.length || !response.emails[0].value) {
+            if (err || !response.emails || !response.emails.length || !response.emails[0].value) {
                 return reply(err || {message: 'missing mail in google oauth'});
             }
             // this is needed because google returns loads of data with a diff structure
@@ -311,20 +315,6 @@ class ArkAuth {
                 last_name: response.name.familyName || '',
                 raw: response
             };
-
-            /*
-             mail: profile.email.toLowerCase(),
-             name: profile.name.first,
-             surname: profile.name.last,
-             picture: profile.raw.picture || '',
-             strategy: strategy,
-             type: 'user',
-             birthdate: '',
-             residence: '',
-             description: '',
-             verified: true,
-             additionalInfo: request.auth.credentials
-             */
 
             this._createOrLoginUser(googleUser, strategy, request, reply);
         });
@@ -340,12 +330,11 @@ class ArkAuth {
 
         this.fbgraph.get("/me", (err, fb_user) => {
             this._createOrLoginUser(fb_user, strategy, request, reply);
-
         });
     }
 
     mobileLoginHandler(request, reply) {
-        if(request.payload.strategy === 'facebook') {
+        if (request.payload.strategy === 'facebook') {
             return this.mobileLoginFacebook(request, reply);
         } else {
             return this.mobileLoginGoogle(request, reply);
@@ -368,6 +357,7 @@ class ArkAuth {
         }
         var profile = request.auth.credentials.profile;
         var strategy = request.auth.strategy;
+        var newUser:any = {};
 
         this.db.getUserLogin(profile.email)
             .then(user => {
@@ -390,9 +380,10 @@ class ArkAuth {
                 // this is actually not an error.
                 // maybe we should add another db fn which gets resolved if no user is found
                 if (reason === 'No user found') {
-                    var newUser:any = {};
+
                     // Sorry for that, i gonna refactor all the things after launch, maybe
                     if (profile.strategy !== 'facebook') {
+
                         newUser = {
                             mail: profile.email.toLowerCase(),
                             name: profile.name.first,
@@ -406,40 +397,44 @@ class ArkAuth {
                             verified: true,
                             additionalInfo: request.auth.credentials
                         };
+
                     } else {
+
                         newUser = profile;
                     }
 
-                    this.db.createUser(newUser, (err, data) => {
 
-                        if (err) {
-                            return reply.redirect('/#/error?r=emailTaken');
-                        }
-                        var userSessionData = {
-                            mail: profile.email,
-                            _id: data.id || data._id,
-                            strategy: strategy
-                        };
-                        request.auth.session.set(userSessionData);
-                        // redirect to context, this route takes the user back to where he was
-                        reply.redirect('/#/context');
+                    // create the actual user
+                    return this.db.createUser(newUser)
+                        .then(data => {
 
-                        // Send a mail to user, which register via facebook or google
-                        this.mailer.sendRegistrationMailWithoutUuid({
-                            name: newUser.name,
-                            mail: newUser.mail
-                        });
+                            var userSessionData = {
+                                mail: profile.email,
+                                _id: data.id || data._id,
+                                strategy: strategy
+                            };
+                            request.auth.session.set(userSessionData);
+                            // redirect to context, this route takes the user back to where he was
+                            reply.redirect('/#/context');
 
-                        // add the default location
-                        this.db.addDefaultLocationToUser(data.id)
-                            .then(value => log('default location added' + value))
-                            .catch(err => logError('error adding default location' + err));
-                    });
+                            // Send a mail to user, which register via facebook or google
+                            this.mailer.sendRegistrationMailWithoutUuid({
+                                name: newUser.name,
+                                mail: newUser.mail
+                            });
+
+                            // add the default location
+                            this.db.addDefaultLocationToUser(data.id)
+                                .then(value => log('default location added' + value))
+                                .catch(err => logError('error adding default location' + err));
+                        }).catch(reply)
+
                 } else {
                     return reply(this.boom.badRequest(reason));
                 }
+            })
 
-            });
+
     }
 
     login(request, reply) {
@@ -532,19 +527,13 @@ class ArkAuth {
     }
 
     resetUserPassword(user) {
-        return new Promise((resolve, reject) => {
-            // set temporary password to new password
-            user.password = user.resetPasswordToken;
-            // 'disable' reset password tokens
-            user.resetPasswordToken = null;
-            user.resetPasswordExpires = null;
-            this.db.updateUser(user._id, user, (err, data) => {
-                if (err) {
-                    return reject(err);
-                }
-            });
-            resolve();
-        });
+        // set temporary password to new password
+        user.password = user.resetPasswordToken;
+        // 'disable' reset password tokens
+        user.resetPasswordToken = null;
+        user.resetPasswordExpires = null;
+
+        return this.db.updateUser(user._id, user);
     }
 
     logout(request, reply) {
@@ -554,21 +543,18 @@ class ArkAuth {
         });
     }
 
-    confirm(request, reply) {
-        this.db.getUserByUUID(request.params.uuid, (err, data)=> {
+    confirm = (request, reply)=> {
+        this.db.getUserByUUID(request.params.uuid)
+            .then(user => {
+                if (!user.verified) {
+                    reply(this.db.updateUser(user._id, {verified: true}));
+                    // TODO: redirect user to landing page
+                } else {
+                    reply(this.boom.badRequest('Mail already verified!'));
+                }
+            }).catch(reply)
+    };
 
-            if (err) {
-                return reply(this.boom.badRequest('Error on confirmation of e-mail address '));
-            }
-
-            var user = data;
-            if (!user.verified) {
-                reply(this.db.updateDocument(user._id, {verified: true}));
-            } else {
-                reply(this.boom.badRequest('Mail already verified!'));
-            }
-        })
-    }
 
     /**
      * Function to call if user forget his password.
@@ -576,39 +562,54 @@ class ArkAuth {
      * @param reply
      */
     passwordForgotten = (request, reply) => {
+        var _user;
+        var resetPassword;
+
         this.db.getUserLogin(request.params.mail.toLowerCase())
             .then(user => {
+                _user = user;
+                resetPassword = this.generatePassword(12, false);
+                return this.generatePasswordToken(resetPassword);
+            }).then(hash => {
+                _user.resetPasswordToken = hash;
+                return this.updatePasswordToken(_user);
+            }).then(() => {
 
-                function replySuccess() {
-                    reply({
-                        message: 'New password generated and sent per mail.'
-                    });
+                this.sendMail({
+                    mail: _user.mail,
+                    name: _user.name,
+                    resetPassword: resetPassword
+                });
+
+                reply({
+                    message: 'New password generated and sent per mail.'
+                });
+
+            }).catch(err => {
+                if (err.isBoom) {
+                    return reply(err);
                 }
-
-                return this.generatePasswordToken(user)
-                    .then(this.updatePasswordToken)
-                    .then(this.sendMail)
-                    .then(replySuccess)
-
-            }).catch(err => reply(this.boom.badRequest(err)));
+                reply(this.boom.badRequest(err))
+            });
     };
 
-    generatePasswordToken(user) {
+    // TODO: maybe extract to a global utility package
+    generatePasswordToken(password) {
         return new Promise((resolve, reject) => {
-            // generate reset password
-            var resetPassword = this.generatePassword(12, false); // -> 76PAGEaq6i5c
 
             this.bcrypt.genSalt(10, (err, salt) => {
-                this.bcrypt.hash(resetPassword, salt, (err, hash) => {
+
+                if (err) {
+                    return reject(err);
+                }
+                this.bcrypt.hash(password, salt, (err, hash) => {
+
                     if (err) {
                         return reject(err);
                     }
-                    user.resetPasswordToken = hash;
-                    user.resetPassword = resetPassword;
-                    resolve(user)
+                    resolve(hash)
                 })
             })
-
         });
     }
 
@@ -618,22 +619,11 @@ class ArkAuth {
     };
 
     updatePasswordToken = (user) => {
-        return new Promise((resolve, reject) => {
-            // set timestamp for password expires
-            user.resetPasswordExpires = Date.now();
-            // tmp remove of plain text variable
-            var resetPassword = user.resetPassword;
-            delete user.resetPassword;
-            // update user with new value
-            this.db.updateUser(user._id, user, (err, data) => {
-                if (err) {
-                    return reject(err);
-                }
-                // add plain text variable for email
-                user.resetPassword = resetPassword;
-                resolve(user);
-            });
-        });
+        // set timestamp for password expires
+        user.resetPasswordExpires = Date.now();
+
+        // update user with new value
+        return this.db.updateUser(user._id, user);
     };
 
 

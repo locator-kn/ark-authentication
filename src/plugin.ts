@@ -4,6 +4,7 @@ export interface IRegister {
 }
 
 declare var Promise:any;
+var http = require('https');
 
 
 import {initLogging, log, logError} from './util/logging'
@@ -285,6 +286,12 @@ class ArkAuth {
                                 .then(value => console.log('default location added', value))
                                 .catch(err => console.log('error adding default location', err));
 
+                            // send slack notif
+                            this.sendSlackNotification({
+                                name: newUser.name,
+                                mail: newUser.mail
+                            });
+
 
                         }).catch(reply)
 
@@ -427,6 +434,13 @@ class ArkAuth {
                             this.db.addDefaultLocationToUser(data.id)
                                 .then(value => log('default location added' + value))
                                 .catch(err => logError('error adding default location' + err));
+
+                            // send slack notif
+                            this.sendSlackNotification({
+                                name: newUser.name,
+                                mail: newUser.mail
+                            });
+
                         }).catch(reply)
 
                 } else {
@@ -624,6 +638,46 @@ class ArkAuth {
 
         // update user with new value
         return this.db.updateUser(user._id, user);
+    };
+
+    private sendSlackNotification = (user) => {
+
+        var slackNotification = {
+            text: "Woop! New User: " + user.name + ' ' + user.mail
+        };
+
+        var body = JSON.stringify(slackNotification);
+
+        var headers = {
+            'Content-Type': 'application/json',
+            'Content-Length': Buffer.byteLength(body)
+        };
+
+        var options = {
+            host: 'hooks.slack.com',
+            path: '/services/T04E7N144/B06DFA7ML/e8LSbACRrOP82d4z8EqtbOOE',
+            method: 'POST',
+            headers: headers
+        };
+
+        var request = http.request(options, function (res) {
+            res.setEncoding('utf-8');
+
+            var responseString = '';
+
+            res.on('data', function (data) {
+                responseString += data;
+            });
+
+            res.on('end', function () {
+                log('Response after sending slack notification: ' + responseString);
+            });
+
+        });
+
+        request.write(body);
+        request.end();
+
     };
 
 

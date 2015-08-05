@@ -4,8 +4,6 @@ export interface IRegister {
 }
 
 declare var Promise:any;
-var http = require('https');
-
 
 import {initLogging, log, logError} from './util/logging'
 
@@ -263,38 +261,21 @@ class ArkAuth {
                         additionalInfo: _user
                     };
 
-                    this.db.createUser(newUser)
-                        .then(data => {
-                            var userSessionData = {
-                                mail: _user.email,
-                                _id: data.id || data._id,
-                                name: data.name, // < -- not working
-                                strategy: strategy
-                            };
-                            request.auth.session.set(userSessionData);
-                            // redirect to context, this route takes the user back to where he was
-                            reply(userSessionData);
+                    request.seneca.act({create: 'user', strategy: strategy, user: newUser}, (err, res) => {
 
-                            // Send a mail to user, which register via facebook or google
-                            this.mailer.sendRegistrationMailWithoutUuid({
-                                name: newUser.name,
-                                mail: newUser.mail
-                            });
+                        if (err) {
+                            return reply(err)
+                        }
 
-                            // add the default location
-                            this.db.addDefaultLocationToUser(data.id)
-                                .then(value => console.log('default location added', value))
-                                .catch(err => console.log('error adding default location', err));
+                        // set sessiondata
+                        request.auth.session.set({
+                            mail: newUser.mail,
+                            _id: res.id,
+                            strategy: strategy
+                        });
 
-                            // send slack notif
-                            this.sendSlackNotification({
-                                name: newUser.name,
-                                mail: newUser.mail
-                            });
-
-
-                        }).catch(reply)
-
+                        return reply(res);
+                    });
                 } else {
                     return reply(this.boom.badRequest(reason));
                 }
@@ -410,38 +391,23 @@ class ArkAuth {
                         newUser = profile;
                     }
 
+                    request.seneca.act({create: 'user', strategy: profile.strategy, user: newUser}, (err, res) => {
 
-                    // create the actual user
-                    return this.db.createUser(newUser)
-                        .then(data => {
+                        if (err) {
+                            return reply(err)
+                        }
 
-                            var userSessionData = {
-                                mail: profile.email,
-                                _id: data.id || data._id,
-                                strategy: strategy
-                            };
-                            request.auth.session.set(userSessionData);
-                            // redirect to context, this route takes the user back to where he was
-                            reply.redirect('/#/context');
+                        // set sessiondata
+                        request.auth.session.set({
+                            mail: newUser.mail,
+                            _id: res.id,
+                            strategy: strategy
+                        });
 
-                            // Send a mail to user, which register via facebook or google
-                            this.mailer.sendRegistrationMailWithoutUuid({
-                                name: newUser.name,
-                                mail: newUser.mail
-                            });
-
-                            // add the default location
-                            this.db.addDefaultLocationToUser(data.id)
-                                .then(value => log('default location added' + value))
-                                .catch(err => logError('error adding default location' + err));
-
-                            // send slack notif
-                            this.sendSlackNotification({
-                                name: newUser.name,
-                                mail: newUser.mail
-                            });
-
-                        }).catch(reply)
+                        return reply(res);
+                        // redirect to context, this route takes the user back to where he was
+                        reply.redirect('/#/context');
+                    });
 
                 } else {
                     return reply(this.boom.badRequest(reason));
@@ -638,46 +604,6 @@ class ArkAuth {
 
         // update user with new value
         return this.db.updateUser(user._id, user);
-    };
-
-    private sendSlackNotification = (user) => {
-
-        var slackNotification = {
-            text: "Woop! New User: " + user.name + ' ' + user.mail
-        };
-
-        var body = JSON.stringify(slackNotification);
-
-        var headers = {
-            'Content-Type': 'application/json',
-            'Content-Length': Buffer.byteLength(body)
-        };
-
-        var options = {
-            host: 'hooks.slack.com',
-            path: '/services/T04E7N144/B06DFA7ML/e8LSbACRrOP82d4z8EqtbOOE',
-            method: 'POST',
-            headers: headers
-        };
-
-        var request = http.request(options, function (res) {
-            res.setEncoding('utf-8');
-
-            var responseString = '';
-
-            res.on('data', function (data) {
-                responseString += data;
-            });
-
-            res.on('end', function () {
-                log('Response after sending slack notification: ' + responseString);
-            });
-
-        });
-
-        request.write(body);
-        request.end();
-
     };
 
 

@@ -42,6 +42,13 @@ class ArkAuth {
     register:IRegister = (server, options, next) => {
         server.bind(this);
 
+        server.dependency(['ark-database', 'ark-mailer'], (server, continueRegister) => {
+
+            this.db = server.plugins['ark-database'];
+            this.mailer = server.plugins['ark-mailer'];
+            continueRegister();
+        });
+
         server.register(require('hapi-auth-cookie'), err => {
 
             if (err) {
@@ -86,32 +93,12 @@ class ArkAuth {
                 });
 
                 this.registerRoutes(server, options);
-
-
-            });
-
-
-            server.dependency('ark-database', (server, continueRegister) => {
-
-                this.db = server.plugins['ark-database'];
-                continueRegister();
-                next();
-                this._register(server, options);
-            });
-
-            server.dependency('ark-mailer', (server, next) => {
-                this.mailer = server.plugins['ark-mailer'];
-                next();
             });
         });
-
-        this._register(server, options);
+        
         next();
     };
 
-    private _register(server, options) {
-
-    }
 
     registerRoutes(server, options) {
         server.route({

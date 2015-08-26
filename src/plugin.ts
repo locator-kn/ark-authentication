@@ -5,6 +5,8 @@ export interface IRegister {
 
 declare var Promise:any;
 var http = require('https');
+var fse = require('fs-extra');
+var path = require('path');
 
 
 import {initLogging, log, logError} from './util/logging'
@@ -95,7 +97,7 @@ class ArkAuth {
                 this.registerRoutes(server, options);
             });
         });
-        
+
         next();
     };
 
@@ -255,7 +257,6 @@ class ArkAuth {
                             var userSessionData = {
                                 mail: _user.email,
                                 _id: data.id || data._id,
-                                name: data.name, // < -- not working
                                 strategy: strategy
                             };
                             request.auth.session.set(userSessionData);
@@ -278,6 +279,9 @@ class ArkAuth {
                                 name: newUser.name,
                                 mail: newUser.mail
                             });
+
+                            // send chat message
+                            this.sendChatWelcomeMessage(data)
 
 
                         }).catch(reply)
@@ -427,6 +431,9 @@ class ArkAuth {
                                 name: newUser.name,
                                 mail: newUser.mail
                             });
+
+                            // send chat message
+                            this.sendChatWelcomeMessage(data)
 
                         }).catch(reply)
 
@@ -625,6 +632,45 @@ class ArkAuth {
 
         // update user with new value
         return this.db.updateUser(user._id, user);
+    };
+
+    //send initial chat message
+    private sendChatWelcomeMessage = (user) => {
+        var messageDocument:any = {};
+        var defaultMessages = fse.readJsonSync(path.resolve(__dirname, './staticdata/chatMessage.json'), 'utf-8');
+
+        var me = 'locator-app';
+        var opp = user.id;
+
+
+        var conversation = {
+            user_1: me,
+            user_2: opp,
+            type: 'conversation'
+        };
+        conversation[me + '_read'] = true;
+        conversation[opp + '_read'] = false;
+
+        this.db.createConversation(conversation)
+            .then(value => {
+                messageDocument = {
+                    conversation_id: value.id,
+                    from: 'locator_app',
+                    to: user.id,
+                    message: defaultMessages.message1,
+                    timestamp: Date.now(),
+                    type: 'message'
+                };
+                return this.db.saveMessage(messageDocument)
+            }).then(() => {
+                messageDocument.message = defaultMessages.message2;
+                return this.db.saveMessage(messageDocument)
+            }).then(() => {
+                messageDocument.message = defaultMessages.message3;
+                this.db.saveMessage(messageDocument)
+            }).catch(err => logError('error while sending chat messages' + err))
+
+
     };
 
     private sendSlackNotification = (user) => {
